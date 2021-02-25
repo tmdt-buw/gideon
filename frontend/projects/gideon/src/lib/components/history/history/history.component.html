@@ -1,0 +1,17 @@
+<div class="history-box" [class]="classes" [cdkDragBoundary]="boundary" cdkDrag fxLayout="column">
+  <div cdkDragHandle fxLayoutAlign="space-between center">
+    <span class="history-header">History</span>
+    <div>
+      <mat-icon class="history-menu" (click)="minimize()">minimize</mat-icon>
+      <mat-icon class="history-menu" (click)="maximize()">open_in_full</mat-icon>
+    </div>
+  </div>
+  <div>
+    <mat-divider></mat-divider>
+  </div>
+  <div #historyList class="history-list">
+    <mat-nav-list dense *ngIf="!minimized">
+      <a mat-list-item *ngFor="let link of links; let i = index" gdTooltip="{{ getState(link).preview }}" (click)="emitNavigate(link, i)" [disabled]="isHistoryActionType(link.type)"> {{ link.type }} </a>
+    </mat-nav-list>
+  </div>
+</div>

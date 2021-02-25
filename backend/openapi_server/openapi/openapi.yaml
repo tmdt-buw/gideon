@@ -1,0 +1,218 @@
+openapi: 3.0.1
+info:
+  description: Documentation Gideon API v1.0
+  title: Gideon API
+  version: "1.0"
+servers:
+- url: http://localhost:37000/api/gideon
+paths:
+  /api/gideon/histories/{id}/sessions/end:
+    get:
+      operationId: end_session
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: user
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: form
+      responses:
+        "200":
+          description: OK
+      tags:
+      - history
+      x-openapi-router-controller: openapi_server.controllers.history_controller
+  /api/gideon/histories/{id}/sessions/init:
+    get:
+      operationId: init_session
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      - explode: true
+        in: query
+        name: user
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: OK
+      tags:
+      - history
+      x-openapi-router-controller: openapi_server.controllers.history_controller
+  /api/gideon/sessions/{id}/actions:
+    post:
+      operationId: record_action
+      parameters:
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          format: uuid
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActionCall'
+        required: true
+      responses:
+        "200":
+          content:
+            '*/*':
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: OK
+      tags:
+      - session-controller
+      x-openapi-router-controller: openapi_server.controllers.session_controller_controller
+components:
+  schemas:
+    ApplicationAction:
+      example:
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        source: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        time: 2000-01-23T04:56:07.000+00:00
+        type: type
+        parameters: '{}'
+        target: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+      properties:
+        id:
+          format: uuid
+          type: string
+        source:
+          format: uuid
+          type: string
+        target:
+          format: uuid
+          type: string
+        time:
+          format: date-time
+          type: string
+        type:
+          type: string
+        parameters:
+          type: object
+      required:
+      - id
+      - time
+      - type
+      type: object
+    ApplicationState:
+      example:
+        preview: preview
+        component: component
+        created: 2000-01-23T04:56:07.000+00:00
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        parameters: '{}'
+      properties:
+        id:
+          format: uuid
+          type: string
+        component:
+          type: string
+        preview:
+          type: string
+        parameters:
+          type: object
+        created:
+          format: date-time
+          type: string
+      required:
+      - component
+      - id
+      type: object
+    Session:
+      example:
+        expiresIn: 0
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        actions:
+        - id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          source: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          time: 2000-01-23T04:56:07.000+00:00
+          type: type
+          parameters: '{}'
+          target: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        - id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          source: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          time: 2000-01-23T04:56:07.000+00:00
+          type: type
+          parameters: '{}'
+          target: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        states:
+        - preview: preview
+          component: component
+          created: 2000-01-23T04:56:07.000+00:00
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          parameters: '{}'
+        - preview: preview
+          component: component
+          created: 2000-01-23T04:56:07.000+00:00
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          parameters: '{}'
+      properties:
+        id:
+          format: uuid
+          type: string
+        actions:
+          items:
+            $ref: '#/components/schemas/ApplicationAction'
+          type: array
+        states:
+          items:
+            $ref: '#/components/schemas/ApplicationState'
+          type: array
+        expiresIn:
+          format: int64
+          type: integer
+      required:
+      - actions
+      - expiresIn
+      - id
+      - states
+      type: object
+    ActionCall:
+      example:
+        action:
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          source: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          time: 2000-01-23T04:56:07.000+00:00
+          type: type
+          parameters: '{}'
+          target: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        state:
+          preview: preview
+          component: component
+          created: 2000-01-23T04:56:07.000+00:00
+          id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+          parameters: '{}'
+      properties:
+        action:
+          $ref: '#/components/schemas/ApplicationAction'
+        state:
+          $ref: '#/components/schemas/ApplicationState'
+      type: object

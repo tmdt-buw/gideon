@@ -1,0 +1,154 @@
+openapi: 3.0.1
+info:
+  title: Gideon API
+  description: Documentation Gideon API v1.0
+  version: '1.0'
+
+servers:
+  - url: http://localhost:8081/api/gideon
+
+paths:
+  /api/gideon/histories/{id}/sessions/init:
+    get:
+      tags:
+        - history
+      operationId: initSession
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: user
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/Session"
+  /api/gideon/histories/{id}/sessions/end:
+    get:
+      tags:
+        - history
+      operationId: endSession
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: user
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: OK
+  /api/gideon/sessions/{id}/actions:
+    post:
+      tags:
+        - session-controller
+      operationId: recordAction
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              "$ref": "#/components/schemas/ActionCall"
+        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            "*/*":
+              schema:
+                "$ref": "#/components/schemas/Session"
+
+components:
+  schemas:
+    ApplicationAction:
+      required:
+        - id
+        - time
+        - type
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        source:
+          type: string
+          format: uuid
+        target:
+          type: string
+          format: uuid
+        time:
+          type: string
+          format: date-time
+        type:
+          type: string
+        parameters:
+          type: object
+    ApplicationState:
+      required:
+        - component
+        - id
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        component:
+          type: string
+        preview:
+          type: string
+        parameters:
+          type: object
+        created:
+          type: string
+          format: date-time
+    Session:
+      required:
+        - actions
+        - expiresIn
+        - id
+        - states
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        actions:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ApplicationAction"
+        states:
+          type: array
+          items:
+            "$ref": "#/components/schemas/ApplicationState"
+        expiresIn:
+          type: integer
+          format: int64
+    ActionCall:
+      type: object
+      properties:
+        action:
+          "$ref": "#/components/schemas/ApplicationAction"
+        state:
+          "$ref": "#/components/schemas/ApplicationState"

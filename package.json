@@ -1,0 +1,15 @@
+{
+  "name": "gideon",
+  "version": "0.0.0-PLACEHOLDER",
+  "license": "Apache-2.0",
+  "author": "Tristan Langer <tlanger@uni-wuppertal.de>",
+  "repository": "https://github.com/tmdt-buw/gideon.git",
+  "scripts": {
+    "gen:server": "openapi-generator-cli generate -i api/openapi.yaml -g python-flask -o backend -s",
+    "gen:api": "npm run gen:frontend -- -o frontend/projects/gideon/src/lib/api -i http://localhost:8081/api/gideon",
+    "gen:frontend": "openapi-generator-cli generate -g typescript-angular --additional-properties=providedInRoot=false,disallowAdditionalPropertiesIfNotPresent=false"
+  },
+  "devDependencies": {
+    "@openapitools/openapi-generator-cli": "^2.1.26"
+  }
+}

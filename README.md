@@ -4,7 +4,10 @@ Gideon is a framework to record provenance and analyse recurring interaction pat
 
 Gideon consists of a frontend library to implement interaction recording in a web-based frontend and a backend service to store interactions and perform graph-algorithms on the recorded data.
 
+### History component
 ![Provenance](img/provenance.png "Provenance")
+
+### Interaction visualization
 ![Interactions](img/interaction-graph.png "Provenance")
 
 ## Examples

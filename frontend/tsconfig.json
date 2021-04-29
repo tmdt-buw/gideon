@@ -7,9 +7,13 @@
     "sourceMap": true,
     "declaration": false,
     "paths": {
-      "gideon": [
-        "dist/gideon/gideon",
-        "dist/gideon"
+      "@gideon/angular": [
+        "dist/angular/angular",
+        "dist/angular"
+      ],
+      "@gideon/core": [
+        "dist/core/core",
+        "dist/core"
       ]
     },
     "downlevelIteration": true,

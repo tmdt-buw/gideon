@@ -7,7 +7,7 @@
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
-          "style": "scss"
+          "style": "less"
         }
       },
       "root": "",
@@ -25,10 +25,15 @@
             "aot": true,
             "assets": [
               "src/favicon.ico",
-              "src/assets"
+              "src/assets",
+              {
+                "glob": "**/*",
+                "input": "./node_modules/@ant-design/icons-angular/src/inline-svg/",
+                "output": "/assets/"
+              }
             ],
             "styles": [
-              "src/styles.scss"
+              "src/styles.less"
             ],
             "scripts": []
           },
@@ -123,38 +128,38 @@
         }
       }
     },
-    "gideon": {
+    "core": {
       "projectType": "library",
-      "root": "projects/gideon",
-      "sourceRoot": "projects/gideon/src",
-      "prefix": "lib",
+      "root": "projects/core",
+      "sourceRoot": "projects/core/src",
+      "prefix": "gd",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:ng-packagr",
           "options": {
-            "tsConfig": "projects/gideon/tsconfig.lib.json",
-            "project": "projects/gideon/ng-package.json"
+            "tsConfig": "projects/core/tsconfig.lib.json",
+            "project": "projects/core/ng-package.json"
           },
           "configurations": {
             "production": {
-              "tsConfig": "projects/gideon/tsconfig.lib.prod.json"
+              "tsConfig": "projects/core/tsconfig.lib.prod.json"
             }
           }
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "main": "projects/gideon/src/test.ts",
-            "tsConfig": "projects/gideon/tsconfig.spec.json",
-            "karmaConfig": "projects/gideon/karma.conf.js"
+            "main": "projects/core/src/test.ts",
+            "tsConfig": "projects/core/tsconfig.spec.json",
+            "karmaConfig": "projects/core/karma.conf.js"
           }
         },
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",
           "options": {
             "tsConfig": [
-              "projects/gideon/tsconfig.lib.json",
-              "projects/gideon/tsconfig.spec.json"
+              "projects/core/tsconfig.lib.json",
+              "projects/core/tsconfig.spec.json"
             ],
             "exclude": [
               "**/node_modules/**"

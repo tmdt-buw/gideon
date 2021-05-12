@@ -1,7 +1,37 @@
-<div fxLayout="row" class="container">
-  <div #chart *ngIf="finished" fxFlex echarts [options]="options"></div>
-  <div fxFlex="100px" fxLayout="column">
-    <span>History</span>
-    <button (click)="replay()" nz-button nzType="primary">Replay</button>
-  </div>
-</div>
+<nz-layout fxFill>
+  <nz-header fxLayout="row" fxLayoutAlign="space-between" fxLayoutGap="30px">
+    <span class="logo">
+      GIDEON
+    </span>
+    <ul nz-menu nzTheme="dark" nzMode="horizontal">
+      <li nz-menu-item [routerLink]="routes.BASIC" nzMatchRouter>Basic Chart</li>
+      <li nz-menu-item [routerLink]="routes.ADVANCED" nzMatchRouter>Advanced Chart</li>
+    </ul>
+    <div class="logo">
+      <span>History</span>
+      <i class="trigger" nz-icon [nzType]="isCollapsed ? 'menu-fold' : 'menu-unfold'" (click)="isCollapsed = !isCollapsed"></i>
+    </div>
+  </nz-header>
+  <nz-layout>
+    <nz-content>
+      <div class="container">
+        <router-outlet></router-outlet>
+      </div>
+    </nz-content>
+    <nz-sider nzCollapsible [nzCollapsedWidth]="0" nzTheme="light" [(nzCollapsed)]="isCollapsed" [nzTrigger]="null">
+      <div class="sider" fxLayout="column">
+        <h3>
+          History
+        </h3>
+        <button (click)="replay()" nz-button nzType="primary">Replay</button>
+        <button (click)="toggleHeatmap()" nz-button nzType="primary">Toggle Heatmap</button>
+        <div>
+          <div *ngFor="let record of gideon.getHistoryRecords()">
+            <span>{{ record.label }}</span>
+          </div>
+        </div>
+      </div>
+    </nz-sider>
+  </nz-layout>
+  <nz-footer>GIDEON ©2021 By TMDT</nz-footer>
+</nz-layout>

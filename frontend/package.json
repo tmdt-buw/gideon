@@ -22,12 +22,11 @@
     "@angular/platform-browser": "~11.2.4",
     "@angular/platform-browser-dynamic": "~11.2.4",
     "@angular/router": "~11.2.4",
-    "echarts": "^5.0.2",
-    "echarts-stat": "^1.2.0",
+    "echarts": "^5.1.1",
+    "heatmap.js": "^2.0.5",
     "lodash": "^4.17.21",
     "ng-zorro-antd": "^11.4.0",
     "ngx-echarts": "^6.0.1",
-    "resize-observer-polyfill": "^1.5.1",
     "rxjs": "~6.6.0",
     "tslib": "^2.0.0",
     "zone.js": "~0.11.3"
@@ -49,6 +48,7 @@
     "karma-jasmine-html-reporter": "^1.5.0",
     "ng-packagr": "^11.2.4",
     "protractor": "~7.0.0",
+    "resize-observer-polyfill": "^1.5.1",
     "ts-node": "~8.3.0",
     "tslint": "~6.1.0",
     "typescript": "~4.1.2"

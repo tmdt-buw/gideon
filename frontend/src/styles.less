@@ -1,7 +1,28 @@
 @import "../node_modules/ng-zorro-antd/ng-zorro-antd.less";
 @import "../projects/core/src/lib/style/gideon.css";
 
-/* You can add global styles to this file, and also import other style files */
-.hidden * {
-  cursor: none;
+
+html, body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Raleway', sans-serif;
+
+  * {
+    outline: none;
+  }
+}
+
+.container {
+  padding: 15px 15px 0 15px !important;
+  margin: 0 auto !important;
+  min-width: 576px;
+  max-width: 100%;
+  width: 86%;
+}
+
+.chart {
+  height: 600px;
 }

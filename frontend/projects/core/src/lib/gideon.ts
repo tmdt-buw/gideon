@@ -27,12 +27,35 @@ export class Gideon {
   }
 
   replayLatest(element: any): void {
-    const r = this._history[this._history.length - 1];
-    this.replay(element, r);
+    const latest = this.getLatestHistoryElement();
+    if (latest) {
+      this.replay(element, latest);
+    }
   }
 
   replay(element: any, history: LocationHistory) {
     this._replay = new Replay(element, history);
+    this.setRecording(false);
+  }
+
+  stopReplay() {
+    this._replay.remove();
+    this.setRecording(true);
+  }
+
+  private setRecording(isRecording: boolean) {
+    const latest = this.getLatestHistoryElement();
+    if (latest) {
+      this.getLatestHistoryElement().mouseEvents.disabled = !isRecording;
+    }
+  }
+
+  private getLatestHistoryElement() {
+    const len = this._history.length;
+    if (len > 0) {
+      return this._history[len - 1];
+    }
+    return null;
   }
 
   toggleHeatmap(): void {

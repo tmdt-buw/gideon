@@ -1,5 +1,5 @@
 import {css, html, LitElement} from 'lit';
-import {customElement} from 'lit/decorators.js';
+import {customElement, property} from 'lit/decorators.js';
 import {Replay} from '../replay';
 
 
@@ -37,8 +37,13 @@ export class Player extends LitElement {
 
     .video-progress {
       position: relative;
-      height: 8.4px;
-      margin-bottom: 10px;
+      height: 3px;
+      margin-bottom: 2px;
+    }
+
+    .video-progress:hover {
+      height: 5px;
+      margin-bottom: 0px;
     }
 
     progress {
@@ -47,7 +52,7 @@ export class Player extends LitElement {
       appearance: none;
       border-radius: 2px;
       width: 100%;
-      height: 8.4px;
+      height: 100%;
       pointer-events: none;
       position: absolute;
       top: 0;
@@ -167,7 +172,7 @@ export class Player extends LitElement {
     input[type=range] {
       -webkit-appearance: none;
       -moz-appearance: none;
-      height: 8.4px;
+      height: 3px;
       background: transparent;
       cursor: pointer;
     }
@@ -184,10 +189,15 @@ export class Player extends LitElement {
       transition: all 0.4s ease;
     }
 
+    .video-progress:hover input[type=range]::-webkit-slider-thumb {
+      display: block;
+    }
+
     input[type=range]::-webkit-slider-thumb {
-      height: 16px;
-      width: 16px;
-      border-radius: 16px;
+      display: none;
+      height: 12px;
+      width: 12px;
+      border-radius: 12px;
       background: var(--main-color);
       cursor: pointer;
       -webkit-appearance: none;
@@ -200,7 +210,7 @@ export class Player extends LitElement {
 
     input[type=range]::-moz-range-track {
       width: 100%;
-      height: 8.4px;
+      height: 5px;
       cursor: pointer;
       border: 1px solid transparent;
       background: transparent;
@@ -240,29 +250,35 @@ export class Player extends LitElement {
   }
 
   private readonly replay: Replay;
+  private timer;
+  private complete = false;
 
-  private playing = true;
+  @property()
+  private playing = false;
+
+  @property()
+  private playTime = 0;
 
   render() {
     return html`
       <div class="player">
         <div class="video-progress">
-          <progress id="progress-bar" value="0" min="0"></progress>
-          <input class="seek" id="seek" value="0" min="0" type="range" step="1">
-          <div class="seek-tooltip" id="seek-tooltip">00:00</div>
+          <progress id="progress-bar" value="${this.playTime}" min="0" max="${this.maxPlayTimeInSeconds()}"></progress>
+          <input class="seek" id="seek" value="${this.playTime}" min="0" max="${this.maxPlayTimeInSeconds()}" type="range" step="1"
+                 @input=${this.skipToTimestamp}>
+          <div class="seek-tooltip" id="seek-tooltip">${this.formatPlayTime()}</div>
         </div>
 
         <div class="bottom-controls">
           <div class="left-controls">
-            <button data-title="${this.playing ? 'Play' : 'Pause'}" @click=${this.togglePlay}>
+            <button data-title=${this.playing ? 'Pause' : 'Play'} @click=${this.togglePlay}>
               <svg class="playback-icons">
-                <use href="#play-icon"></use>
-                <use class="hidden" href="#pause"></use>
+                <use href=${this.complete ? '#replay' : this.playing ? '#pause' : '#play'}></use>
               </svg>
             </button>
 
             <div class="time">
-              <time id="time-elapsed">00:00</time>
+              <time id="time-elapsed">${this.formatPlayTime()}</time>
               <span> / </span>
               <time id="duration">${this.maxPlayTime()}</time>
             </div>
@@ -276,68 +292,86 @@ export class Player extends LitElement {
             <path d="M14.016 5.016h3.984v13.969h-3.984v-13.969zM6 18.984v-13.969h3.984v13.969h-3.984z"></path>
           </symbol>
 
-          <symbol id="play-icon" viewBox="0 0 24 24">
+          <symbol id="play" viewBox="0 0 24 24">
             <path d="M8.016 5.016l10.969 6.984-10.969 6.984v-13.969z"></path>
           </symbol>
 
-          <symbol id="pip" viewBox="0 0 24 24">
-            <path
-              d="M21 19.031v-14.063h-18v14.063h18zM23.016 18.984q0 0.797-0.609 1.406t-1.406 0.609h-18q-0.797 0-1.406-0.609t-0.609-1.406v-14.016q0-0.797 0.609-1.383t1.406-0.586h18q0.797 0 1.406 0.586t0.609 1.383v14.016zM18.984 11.016v6h-7.969v-6h7.969z"></path>
+          <symbol id="replay" viewBox="0 0 24 24">
+            <path d="M12,5V1L7,6l5,5V7c3.31,0,6,2.69,6,6s-2.69,6-6,6s-6-2.69-6-6H4c0,4.42,3.58,8,8,8s8-3.58,8-8S16.42,5,12,5z"/>
           </symbol>
         </defs>
       </svg>
     `;
   }
 
-  createPlayer() {
-    // const video = document.getElementById('video');
-    // const videoControls = document.getElementById('video-controls');
-    // const playbackIcons = document.querySelectorAll('.playback-icons use');
-    // const timeElapsed = document.getElementById('time-elapsed');
-    // const duration = document.getElementById('duration');
-    // const progressBar = document.getElementById('progress-bar');
-    // const seek = document.getElementById('seek');
-    // const seekTooltip = document.getElementById('seek-tooltip');
-    // const playbackAnimation = document.getElementById('playback-animation');
-    // const pipButton = document.getElementById('pip-button');
-    // videoControls.addEventListener('mouseenter', showControls);
-    // videoControls.addEventListener('mouseleave', hideControls);
-    // seek.addEventListener('mousemove', updateSeekTooltip);
-    // seek.addEventListener('input', skipAhead);
-    // pipButton.addEventListener('click', togglePip);
-  }
-
   togglePlay() {
-    if (this.playing) {
-      this.pause();
+    if (this.complete) {
+      this.reset();
     } else {
-      this.play();
+      if (this.playing) {
+        this.pause();
+      } else {
+        this.play();
+      }
     }
   }
 
   play() {
-
+    this.playing = true;
+    this.startTimer();
   }
 
   pause() {
-
+    this.playing = false;
+    clearInterval(this.timer);
   }
 
-  skipToTimestamp() {
+  reset() {
+    this.playTime = 0;
+    this.complete = false;
+    this.play();
+  }
 
+  private startTimer() {
+    this.timer = setInterval(() => {
+      if (this.playTime < this.maxPlayTimeInSeconds()) {
+        ++this.playTime;
+      }
+      if (this.playTime === this.maxPlayTimeInSeconds()) {
+        this.complete = true;
+        clearInterval(this.timer);
+      }
+    }, 1000);
+  }
+
+  private skipToTimestamp(event: Event) {
+    // @ts-ignore
+    this.playTime = event.path[0].valueAsNumber;
+    if (this.playTime === this.maxPlayTimeInSeconds()) {
+      this.complete = true;
+    } else {
+      this.complete = false;
+    }
+  }
+
+  private formatPlayTime() {
+    return this.formatTime(this.playTime * 1000);
+  }
+
+  private maxPlayTimeInSeconds(): number {
+    return Math.round(this.replay.events.playTime / 1000);
+  }
+
+  private maxPlayTime(): string {
+    return this.formatTime(this.maxPlayTimeInSeconds() * 1000);
   }
 
   private formatTime(timeInMs: number) {
     const result = new Date(timeInMs).toISOString().substr(11, 8);
-
-    return {
+    const time = {
       minutes: result.substr(3, 2),
       seconds: result.substr(6, 2)
     };
-  }
-
-  private maxPlayTime(): string {
-    const time = this.formatTime(this.replay.events.playTime);
     return `${time.minutes}:${time.seconds}`;
   }
 

@@ -1,15 +1,19 @@
-import {AfterViewInit, Component, ElementRef} from '@angular/core';
+import {Component, ElementRef, OnInit} from '@angular/core';
+import {ActivatedRoute} from '@angular/router';
 import {Gideon} from '../../lib/gideon';
 
 @Component({
   template: ''
 })
-export abstract class TrackedComponent implements AfterViewInit {
+export abstract class TrackedComponent implements OnInit {
 
-  protected constructor(private gideon: Gideon, private elementRef: ElementRef) {
+  protected constructor(private gideon: Gideon, private elementRef: ElementRef, private route: ActivatedRoute) {
   }
 
-  ngAfterViewInit(): void {
+  ngOnInit(): void {
+    this.route.queryParams.subscribe(params => {
+      console.log(params)
+    });
     this.gideon.registerElement(this.elementRef.nativeElement);
   }
 

@@ -15,7 +15,7 @@
   <nz-layout>
     <nz-content>
       <div class="container">
-        <router-outlet></router-outlet>
+        <router-outlet (activate)="onActivate($event)"></router-outlet>
       </div>
     </nz-content>
     <nz-sider nzCollapsible [nzCollapsedWidth]="0" nzTheme="light" [(nzCollapsed)]="isCollapsed" [nzTrigger]="null">

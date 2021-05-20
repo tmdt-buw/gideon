@@ -1,6 +1,6 @@
-import {MouseEventsRecord} from '../mouse/mouse-events-record';
+import {MouseEventsRecord} from './model/mouse-events-record';
 
-export class HistoryRecord {
+export class LocationHistory {
 
   location: Location;
   mouseEvents: MouseEventsRecord;
@@ -8,6 +8,10 @@ export class HistoryRecord {
   constructor(location: Location, element: any) {
     this.location = location;
     this.mouseEvents = new MouseEventsRecord(element);
+  }
+
+  get label(): string {
+    return this.location.pathname;
   }
 }
 

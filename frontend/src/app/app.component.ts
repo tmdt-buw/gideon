@@ -1,4 +1,5 @@
-import {Component} from '@angular/core';
+import {Component, ViewChildren} from '@angular/core';
+import {TrackedComponent} from '../../projects/core/src/examples/angular/tracked.component';
 import {Gideon} from '../../projects/core/src/lib/gideon';
 import {appRoutingNames} from './app-routing.names';
 
@@ -12,23 +13,23 @@ export class AppComponent {
   readonly routes = appRoutingNames;
 
   isCollapsed = true;
-  heatmap = false;
   gideon = Gideon.getInstance();
+
+  trackedComponent;
 
   constructor() {
   }
 
+  onActivate(componentRef: any) {
+    this.trackedComponent = componentRef.elementRef.nativeElement;
+  }
+
   replay(): void {
-    this.gideon.replayLatest();
+    this.gideon.replayLatest(this.trackedComponent);
   }
 
   toggleHeatmap(): void {
-    if (this.heatmap) {
-      this.gideon.hideHeatmap();
-    } else {
-      this.gideon.showHeatmapForLatest();
-    }
-    this.heatmap = !this.heatmap;
+    this.gideon.toggleHeatmap();
   }
 
 }

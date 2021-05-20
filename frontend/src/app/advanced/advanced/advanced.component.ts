@@ -1,4 +1,5 @@
 import {Component, ElementRef, OnDestroy} from '@angular/core';
+import {ActivatedRoute} from '@angular/router';
 import * as util from 'zrender/lib/core/util';
 import {TrackedComponent} from '../../../../projects/core/src/examples/angular/tracked.component';
 import {Gideon} from '../../../../projects/core/src/lib/gideon';
@@ -76,8 +77,8 @@ export class AdvancedComponent extends TrackedComponent implements OnDestroy {
     ]
   };
 
-  constructor(elementRef: ElementRef) {
-    super(Gideon.getInstance(), elementRef);
+  constructor(elementRef: ElementRef, route: ActivatedRoute) {
+    super(Gideon.getInstance(), elementRef, route);
   }
 
   ngOnDestroy(): void {

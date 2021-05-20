@@ -1,62 +1,56 @@
+import {LocationHistory} from '../record/location-history';
+import {MouseEventRecord, MouseEventType} from '../record/model/mouse-event-record';
 import {Configuration} from './config/configuration';
 import {ReplaySpeed} from './config/replay-speed';
-import {MouseEventRecord} from './mouse-event-record';
-import * as h337 from 'heatmap.js';
+import {Heatmap} from './widgets/heatmap';
+import {Player} from './widgets/player';
 
-export class MouseEventsRecord {
+export class Replay {
 
-  constructor(element: any) {
-    this.registerContainer(element);
-  }
+  private readonly element: any;
+  private readonly history: LocationHistory;
 
-  private history: MouseEventRecord[] = [];
-  private replaying = false;
   private replaySpeed = ReplaySpeed.NORMAL;
-  private initialized: number;
 
-  private element: any;
+  private readonly player: Player;
+  private heatmap: Heatmap;
 
-  private heatmap: any;
-
-  private registerContainer(element: any): void {
-    this.element = element;
-    this.initialized = Date.now();
-
-    this.element.addEventListener('click', (event) => {
-      this.recordMouseEvent(event);
-    });
-
-    this.element.addEventListener('mousemove', (event) => {
-      this.recordMouseEvent(event);
-    });
+  get events() {
+    return this.history.mouseEvents;
   }
 
-  private recordMouseEvent(event: MouseEvent): void {
-    if (!this.replaying) {
-      const record = new MouseEventRecord();
-      record.time = Date.now();
-      const rect = this.element.getBoundingClientRect();
-      record.x = event.x / rect.width;
-      record.y = event.y / rect.height;
-      record.event = event;
-      this.history.push(record);
-    }
+  constructor(element: any, history: LocationHistory) {
+    this.element = element;
+    this.history = history;
+    this.player = new Player(this);
+    document.body.appendChild(this.player);
   }
 
   async replayContainer(): Promise<void> {
-    this.replaying = true;
-    this.element.classList.add('hidden');
-    const cursor = this.addCursor();
+    if (this.events.history.length > 0) {
+      this.element.classList.add('hidden');
+      const cursor = this.addCursor();
 
-    await this.replayMouseEvent(cursor, this.history[0], this.initialized);
-    for (let i = 1; i < this.history.length; i++) {
-      // @ts-ignore
-      await this.replayMouseEvent(cursor, this.history[i], this.history[i - 1].time);
+      await this.replayMouseEvent(cursor, this.history[0], this.events.initialized);
+      for (let i = 1; i < this.events.history.length; i++) {
+        // @ts-ignore
+        await this.replayMouseEvent(cursor, this.history[i], this.history[i - 1].time);
+      }
+
+      this.element.classList.remove('hidden');
+      this.removeCursor();
     }
+  }
 
-    this.element.classList.remove('hidden');
-    this.removeCursor();
-    this.replaying = false;
+  toggleHeatmap(type: MouseEventType) {
+    if (this.heatmap) {
+      this.heatmap.remove();
+    }
+    this.heatmap = new Heatmap(this.element, this.history, type);
+  }
+
+  remove() {
+    this.heatmap.remove();
   }
 
   private addCursor(): HTMLDivElement {
@@ -102,8 +96,8 @@ export class MouseEventsRecord {
 
   private replayMouseClick(eventRecord: MouseEventRecord): void {
     const rect = this.element.getBoundingClientRect();
-    const x = eventRecord.x * rect.width;
-    const y = eventRecord.y * rect.height;
+    const x = eventRecord.x * rect.right;
+    const y = eventRecord.y * rect.bottom;
     const event = eventRecord.event;
     // create click effect
     const clickEffect = document.createElement('div');
@@ -121,11 +115,11 @@ export class MouseEventsRecord {
 
   private replayMouseMove(cursor: HTMLDivElement, eventRecord: MouseEventRecord): void {
     const rect = this.element.getBoundingClientRect();
-    const x = eventRecord.x * rect.width;
-    const y = eventRecord.y * rect.height;
+    const x = eventRecord.x * rect.right;
+    const y = eventRecord.y * rect.bottom;
     const event = eventRecord.event;
-    cursor.style.left = x - 5 + 'px';
-    cursor.style.top = y - 5 + 'px';
+    cursor.style.left = x + 'px';
+    cursor.style.top = y + 'px';
     const evt = document.createEvent('MouseEvent');
     evt.initMouseEvent('mousemove', true, true, window,
       0, 0, 0, x, y, false, false, false, false, 0, null);
@@ -138,29 +132,5 @@ export class MouseEventsRecord {
     );
   }
 
-  createMouseMoveHeatmap(): void {
-    this.createHeatmap(this.history.filter(record => record.event.type === 'mousemove'));
-  }
 
-  private createHeatmap(events: MouseEventRecord[]): void {
-    this.heatmap = h337.create({
-      container: this.element
-    });
-    const data = events.map(event => {
-      const rect = this.element.getBoundingClientRect();
-      return {
-        x: Math.floor(event.x * rect.width),
-        y: Math.floor(event.y * rect.height),
-        value: 1
-      };
-    });
-    this.heatmap.setData({
-      max: 1,
-      data
-    });
-  }
-
-  removeHeatmap(): void {
-    this.heatmap._renderer.canvas.remove();
-  }
 }

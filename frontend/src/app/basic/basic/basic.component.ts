@@ -1,4 +1,5 @@
-import {AfterViewInit, Component, ElementRef} from '@angular/core';
+import {AfterViewInit, Component, ElementRef, HostListener} from '@angular/core';
+import {ActivatedRoute} from '@angular/router';
 import {connect, getInstanceByDom} from 'echarts';
 import {TrackedComponent} from '../../../../projects/core/src/examples/angular/tracked.component';
 import {Gideon} from '../../../../projects/core/src/lib/gideon';
@@ -10,8 +11,8 @@ import {Gideon} from '../../../../projects/core/src/lib/gideon';
 })
 export class BasicComponent extends TrackedComponent implements AfterViewInit {
 
-  constructor(elementRef: ElementRef) {
-    super(Gideon.getInstance(), elementRef);
+  constructor(elementRef: ElementRef, route: ActivatedRoute) {
+    super(Gideon.getInstance(), elementRef, route);
   }
 
   options1 = {
@@ -26,7 +27,7 @@ export class BasicComponent extends TrackedComponent implements AfterViewInit {
       left: '3%',
       right: '4%',
       bottom: '3%',
-      containLabel: true,
+      containLabel: true
     },
     xAxis: [
       {
@@ -64,7 +65,7 @@ export class BasicComponent extends TrackedComponent implements AfterViewInit {
       left: '3%',
       right: '4%',
       bottom: '3%',
-      containLabel: true,
+      containLabel: true
     },
     xAxis: [
       {
@@ -91,7 +92,6 @@ export class BasicComponent extends TrackedComponent implements AfterViewInit {
   };
 
   ngAfterViewInit(): void {
-    super.ngAfterViewInit();
     setTimeout(() => {
       const chartElement1 = document.getElementById('chart1');
       const chartElement2 = document.getElementById('chart2');
@@ -124,6 +124,5 @@ export class BasicComponent extends TrackedComponent implements AfterViewInit {
       });
     });
   }
-
 
 }

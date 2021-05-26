@@ -259,14 +259,20 @@ export class Player extends LitElement {
   @property()
   private playTime = 0;
 
+  @property()
+  private seek = {
+    content: '00:00',
+    left: 0
+  };
+
   render() {
     return html`
       <div class="player">
         <div class="video-progress">
-          <progress id="progress-bar" value="${this.playTime}" min="0" max="${this.maxPlayTimeInSeconds()}"></progress>
-          <input class="seek" id="seek" value="${this.playTime}" min="0" max="${this.maxPlayTimeInSeconds()}" type="range" step="1"
-                 @input=${this.skipToTimestamp}>
-          <div class="seek-tooltip" id="seek-tooltip">${this.formatPlayTime()}</div>
+          <progress id="progress-bar" .value="${this.playTime}" min="0" max="${this.maxPlayTimeInSeconds()}"></progress>
+          <input class="seek" id="seek" .value="${this.playTime}" min="0" max="${this.maxPlayTimeInSeconds()}" type="range" step="1"
+                 @input=${this.skipToTimestamp} @mousemove=${this.updateSeekTooltip}>
+          <div class="seek-tooltip" id="seek-tooltip" style="left: ${this.seek.left}px">${this.seek.content}</div>
         </div>
 
         <div class="bottom-controls">
@@ -316,12 +322,12 @@ export class Player extends LitElement {
     }
   }
 
-  play() {
+  private play() {
     this.playing = true;
     this.startTimer();
   }
 
-  pause() {
+  private pause() {
     this.playing = false;
     clearInterval(this.timer);
   }
@@ -333,25 +339,38 @@ export class Player extends LitElement {
   }
 
   private startTimer() {
-    this.timer = setInterval(() => {
-      if (this.playTime < this.maxPlayTimeInSeconds()) {
-        ++this.playTime;
-      }
-      if (this.playTime === this.maxPlayTimeInSeconds()) {
-        this.complete = true;
-        clearInterval(this.timer);
-      }
-    }, 1000);
+    this.timer = setInterval(() => this.incrementTime(), 1000);
+  }
+
+  private incrementTime(): void {
+    if (this.playTime < this.maxPlayTimeInSeconds()) {
+      ++this.playTime;
+    }
+    if (this.playTime === this.maxPlayTimeInSeconds()) {
+      this.complete = true;
+      this.playing = false;
+      clearInterval(this.timer);
+    }
   }
 
   private skipToTimestamp(event: Event) {
     // @ts-ignore
     this.playTime = event.path[0].valueAsNumber;
-    if (this.playTime === this.maxPlayTimeInSeconds()) {
-      this.complete = true;
-    } else {
-      this.complete = false;
-    }
+    this.complete = this.playTime === this.maxPlayTimeInSeconds();
+  }
+
+  private updateSeekTooltip(event: MouseEvent) {
+    // @ts-ignore
+    const seek = event.path[0];
+    const skipTo = Math.round(
+      (event.offsetX / seek.clientWidth) *
+      parseInt(seek.getAttribute('max'), 10)
+    );
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+    this.seek = {
+      content: this.formatTime(skipTo * 1000),
+      left: event.x - rect.left + 10
+    };
   }
 
   private formatPlayTime() {

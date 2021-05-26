@@ -7,6 +7,10 @@ div.clickEffect {
   z-index: 1000;
 }
 
+.gd-hidden * {
+  cursor: none;
+}
+
 @keyframes clickEffect {
 
   0% {

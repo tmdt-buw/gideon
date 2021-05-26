@@ -39,7 +39,7 @@ export class Gideon {
   }
 
   stopReplay() {
-    this._replay.remove();
+    this._replay?.remove();
     this.setRecording(true);
   }
 

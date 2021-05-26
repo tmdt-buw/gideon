@@ -1,7 +1,7 @@
 import {LocationHistory} from '../record/location-history';
 import {MouseEventRecord, MouseEventType} from '../record/model/mouse-event-record';
-import {Configuration} from './config/configuration';
 import {ReplaySpeed} from './config/replay-speed';
+import {Cursor} from './widgets/cursor';
 import {Heatmap} from './widgets/heatmap';
 import {Player} from './widgets/player';
 
@@ -13,6 +13,7 @@ export class Replay {
   private replaySpeed = ReplaySpeed.NORMAL;
 
   private readonly player: Player;
+  private readonly cursor;
   private heatmap: Heatmap;
 
   get events() {
@@ -24,66 +25,63 @@ export class Replay {
     this.history = history;
     this.player = new Player(this);
     document.body.appendChild(this.player);
-  }
-
-  async replayContainer(): Promise<void> {
-    if (this.events.history.length > 0) {
-      this.element.classList.add('hidden');
-      const cursor = this.addCursor();
-
-      await this.replayMouseEvent(cursor, this.history[0], this.events.initialized);
-      for (let i = 1; i < this.events.history.length; i++) {
-        // @ts-ignore
-        await this.replayMouseEvent(cursor, this.history[i], this.history[i - 1].time);
-      }
-
-      this.element.classList.remove('hidden');
-      this.removeCursor();
-    }
+    this.cursor = new Cursor();
+    document.body.appendChild(this.cursor);
+    this.element.classList.add('gd-hidden');
   }
 
   toggleHeatmap(type: MouseEventType) {
-    if (this.heatmap) {
-      this.heatmap.remove();
-    }
+    this.heatmap?.remove();
     this.heatmap = new Heatmap(this.element, this.history, type);
   }
 
   remove() {
-    this.heatmap.remove();
+    this.heatmap?.remove();
+    this.cursor?.remove();
+    this.player?.remove();
+    this.element.classList.remove('gd-hidden');
   }
 
-  private addCursor(): HTMLDivElement {
-    let cursor = document.getElementById('gdCursor') as HTMLDivElement;
-    if (!cursor) {
-      cursor = document.createElement('div');
-      cursor.id = 'gdCursor';
-      cursor.style.position = 'absolute';
-      cursor.style.width = Configuration.MOUSE_SIZE;
-      cursor.style.height = Configuration.MOUSE_SIZE;
-      cursor.style.borderRadius = Configuration.MOUSE_SIZE;
-      cursor.style.backgroundSize = Configuration.MOUSE_SIZE;
-      cursor.style.backgroundImage = 'url(' + Configuration.CURSOR_ICON + ')';
-      document.body.appendChild(cursor);
+  async start(time?: number): Promise<void> {
+    if (this.events.history.length > 0) {
+      const history = this.events.history;
+      const max = history.length;
+      let next = 1;
+      if (time) {
+        const init = this.events.initialized;
+        let last;
+        for (let i = 0; i < history.length; i++) {
+          last = this.history.mouseEvents[i];
+          next = i + 1;
+          const startTime = history[next].time - init;
+          if (next < max && startTime > time ) {
+            await this.replayMouseEvent(last, startTime - time);
+          }
+        }
+      } else {
+        await this.replayMouseEvent(this.history[0], this.events.initialized);
+      }
+      if (next < max) {
+        for (let i = next; i < this.events.history.length; i++) {
+          // @ts-ignore
+          await this.replayMouseEvent(cursor, this.history[i], this.history[i - 1].time);
+        }
+      }
     }
-    return cursor;
   }
 
-  private removeCursor(): void {
-    const cursor = document.getElementById('gdCursor');
-    if (cursor) {
-      cursor.remove();
-    }
+  stop(): void {
+
   }
 
-  async replayMouseEvent(cursor: HTMLDivElement, record: MouseEventRecord, refTime: number): Promise<void> {
+  private async replayMouseEvent(record: MouseEventRecord, refTime: number): Promise<void> {
     switch (record.event.type) {
       case 'click': {
         this.replayMouseClick(record);
         break;
       }
       case 'mousemove': {
-        this.replayMouseMove(cursor, record);
+        this.replayMouseMove(record);
         break;
       }
       default: {
@@ -113,13 +111,13 @@ export class Replay {
     event.target.dispatchEvent(evt);
   }
 
-  private replayMouseMove(cursor: HTMLDivElement, eventRecord: MouseEventRecord): void {
+  private replayMouseMove(eventRecord: MouseEventRecord): void {
     const rect = this.element.getBoundingClientRect();
     const x = eventRecord.x * rect.right;
     const y = eventRecord.y * rect.bottom;
     const event = eventRecord.event;
-    cursor.style.left = x + 'px';
-    cursor.style.top = y + 'px';
+    this.cursor.style.left = x + 'px';
+    this.cursor.style.top = y + 'px';
     const evt = document.createEvent('MouseEvent');
     evt.initMouseEvent('mousemove', true, true, window,
       0, 0, 0, x, y, false, false, false, false, 0, null);

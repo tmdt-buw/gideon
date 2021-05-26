@@ -82,6 +82,7 @@ export class AdvancedComponent extends TrackedComponent implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    super.ngOnDestroy();
     if (this.updatePosition) {
       window.removeEventListener('resize', this.updatePosition);
     }
@@ -89,7 +90,7 @@ export class AdvancedComponent extends TrackedComponent implements OnDestroy {
 
   onChartReady(myChart: any): void {
     const onPointDragging = function(dataIndex) {
-      Data[dataIndex] = myChart.convertFromPixel({ gridIndex: 0 }, this.position) as number[];
+      Data[dataIndex] = myChart.convertFromPixel({gridIndex: 0}, this.position) as number[];
 
       // Update data
       myChart.setOption({
@@ -135,7 +136,7 @@ export class AdvancedComponent extends TrackedComponent implements OnDestroy {
         graphic: util.map(Data, (item, dataIndex) => {
           return {
             type: 'circle',
-            position: myChart.convertToPixel({ gridIndex: 0 }, item),
+            position: myChart.convertToPixel({gridIndex: 0}, item),
             shape: {
               cx: 0,
               cy: 0,

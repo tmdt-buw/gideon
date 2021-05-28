@@ -12,7 +12,7 @@ export abstract class TrackedComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe(params => {
-      console.log(params);
+
     });
     this.gideon.registerElement(this.elementRef.nativeElement);
   }

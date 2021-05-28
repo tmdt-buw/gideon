@@ -1,3 +1,4 @@
+import {BehaviorSubject} from 'rxjs';
 import {LocationHistory} from '../record/location-history';
 import {MouseEventRecord, MouseEventType} from '../record/model/mouse-event-record';
 import {ReplaySpeed} from './config/replay-speed';
@@ -9,126 +10,178 @@ export class Replay {
 
   private readonly element: any;
   private readonly history: LocationHistory;
+  private readonly historyByTimeFrame: MouseEventRecord[][];
 
+  private readonly timeFrame = 5;
   private replaySpeed = ReplaySpeed.NORMAL;
 
   private readonly player: Player;
   private readonly cursor;
   private heatmap: Heatmap;
 
+  timer: any;
+  playTime = new BehaviorSubject(0);
+  playing = new BehaviorSubject(false);
+  complete = new BehaviorSubject(false);
+
   get events() {
     return this.history.mouseEvents;
+  }
+
+  onResize() {
+    if (this.heatmap) {
+      this.showHeatmap(this.heatmap.type);
+    }
   }
 
   constructor(element: any, history: LocationHistory) {
     this.element = element;
     this.history = history;
+    this.historyByTimeFrame = this.history.mouseEvents.historyByTimeframe(this.timeFrame);
     this.player = new Player(this);
     document.body.appendChild(this.player);
     this.cursor = new Cursor();
     document.body.appendChild(this.cursor);
     this.element.classList.add('gd-hidden');
+    window.addEventListener('resize', () => this.onResize());
   }
 
-  toggleHeatmap(type: MouseEventType) {
+  toggleHeatmap(type?: MouseEventType): void {
+    if (this.heatmap) {
+      this.removeHeatmap();
+    } else {
+      this.showHeatmap(type);
+    }
+  }
+
+  showHeatmap(type?: MouseEventType): void {
     this.heatmap?.remove();
     this.heatmap = new Heatmap(this.element, this.history, type);
   }
 
-  remove() {
+  removeHeatmap(): void {
     this.heatmap?.remove();
+    this.heatmap = null;
+  }
+
+  remove() {
+    this.pause();
+    this.removeHeatmap();
     this.cursor?.remove();
     this.player?.remove();
     this.element.classList.remove('gd-hidden');
   }
 
-  async start(time?: number): Promise<void> {
-    if (this.events.history.length > 0) {
-      const history = this.events.history;
-      const max = history.length;
-      let next = 1;
-      if (time) {
-        const init = this.events.initialized;
-        let last;
-        for (let i = 0; i < history.length; i++) {
-          last = this.history.mouseEvents[i];
-          next = i + 1;
-          const startTime = history[next].time - init;
-          if (next < max && startTime > time ) {
-            await this.replayMouseEvent(last, startTime - time);
+  play() {
+    this.playing.next(true);
+    this.startTimer();
+  }
+
+  pause() {
+    this.playing.next(false);
+    clearInterval(this.timer);
+  }
+
+  reset() {
+    this.playTime.next(0);
+    this.complete.next(false);
+    this.play();
+  }
+
+  private startTimer() {
+    this.timer = setInterval(() => this.incrementTime(), this.timeFrame);
+  }
+
+  private setPlayTime(time: number, restore?: boolean): void {
+    const max = Math.ceil(this.events.playTime / 1000) * 1000;
+    if (time < max) {
+      if (this.complete.value) {
+        this.complete.next(false);
+      }
+      const idx = time / this.timeFrame;
+      this.playTime.next(time);
+      const frame = this.historyByTimeFrame[idx];
+      if (restore && frame.length < 1) {
+        for (let i = idx; i > 0; i--) {
+          const prev = this.historyByTimeFrame[i];
+          if (prev.length > 0) {
+            this.replayRecords(prev);
+            break;
           }
         }
+        this.hideCursor();
       } else {
-        await this.replayMouseEvent(this.history[0], this.events.initialized);
+        this.replayRecords(frame);
       }
-      if (next < max) {
-        for (let i = next; i < this.events.history.length; i++) {
-          // @ts-ignore
-          await this.replayMouseEvent(cursor, this.history[i], this.history[i - 1].time);
-        }
-      }
+    }
+    if (time >= max) {
+      this.complete.next(true);
+      this.playing.next(false);
+      clearInterval(this.timer);
     }
   }
 
-  stop(): void {
-
+  private incrementTime(): void {
+    this.setPlayTime(this.playTime.value + this.timeFrame);
   }
 
-  private async replayMouseEvent(record: MouseEventRecord, refTime: number): Promise<void> {
+  replayRecords(records: MouseEventRecord[]): void {
+    if (records) {
+      records.forEach(record => {
+        this.replayMouseEvent(record);
+      });
+    }
+  }
+
+  private replayMouseEvent(record: MouseEventRecord): void {
     switch (record.event.type) {
       case 'click': {
         this.replayMouseClick(record);
         break;
       }
-      case 'mousemove': {
-        this.replayMouseMove(record);
+      case 'mouseleave': {
+        this.replayMouseLeave(record);
         break;
       }
       default: {
-        // this.replayMouseDefault(record.event);
+        this.replayDefault(record);
         break;
       }
     }
-    await this.sleep(record.time - refTime);
   }
 
   private replayMouseClick(eventRecord: MouseEventRecord): void {
-    const rect = this.element.getBoundingClientRect();
-    const x = eventRecord.x * rect.right;
-    const y = eventRecord.y * rect.bottom;
-    const event = eventRecord.event;
+    const replay = this.replayDefault(eventRecord);
     // create click effect
     const clickEffect = document.createElement('div');
     clickEffect.className = 'clickEffect';
-    clickEffect.style.top = y + 'px';
-    clickEffect.style.left = x + 'px';
+    clickEffect.style.top = replay.y + 'px';
+    clickEffect.style.left = replay.x + 'px';
     document.body.appendChild(clickEffect);
     clickEffect.addEventListener('animationend', () => clickEffect.parentElement.removeChild(clickEffect));
-    // dispatch click event
-    const evt = document.createEvent('MouseEvent');
-    evt.initMouseEvent('click', true, true, window,
-      0, 0, 0, x, y, false, false, false, false, 0, null);
-    event.target.dispatchEvent(evt);
   }
 
-  private replayMouseMove(eventRecord: MouseEventRecord): void {
+  private replayMouseLeave(eventRecord: MouseEventRecord): void {
+    this.replayDefault(eventRecord);
+    this.hideCursor();
+  }
+
+  private replayDefault(eventRecord: MouseEventRecord): { x: number; y: number; } {
     const rect = this.element.getBoundingClientRect();
     const x = eventRecord.x * rect.right;
     const y = eventRecord.y * rect.bottom;
-    const event = eventRecord.event;
-    this.cursor.style.left = x + 'px';
-    this.cursor.style.top = y + 'px';
+    this.cursor.top = y + 'px';
+    this.cursor.left = x + 'px';
     const evt = document.createEvent('MouseEvent');
-    evt.initMouseEvent('mousemove', true, true, window,
+    evt.initMouseEvent(eventRecord.event.type, true, true, window,
       0, 0, 0, x, y, false, false, false, false, 0, null);
-    event.target.dispatchEvent(evt);
+    eventRecord.event.target.dispatchEvent(evt);
+    return {x, y};
   }
 
-  private sleep(ms: number): Promise<any> {
-    return new Promise(
-      resolve => setTimeout(resolve, ms * this.replaySpeed)
-    );
+  private hideCursor(): void {
+    this.cursor.top = '100%';
+    this.cursor.left = '100%';
   }
-
 
 }

@@ -107,7 +107,11 @@ export class Player extends LitElement {
     .left-controls {
       display: flex;
       align-items: center;
-      color: #fff;
+    }
+
+    .right-controls {
+      display: flex;
+      align-items: center;
     }
 
     .time {
@@ -247,10 +251,17 @@ export class Player extends LitElement {
   constructor(replay: Replay) {
     super();
     this.replay = replay;
+    this.replay.complete.subscribe(complete => this.complete = complete);
+    this.replay.playing.subscribe(playing => this.playing = playing);
+    this.replay.playTime.subscribe(time => this.playTime = Math.round(time / 1000));
   }
 
   private readonly replay: Replay;
-  private timer;
+
+  @property()
+  private showHeatmap = false;
+
+  @property()
   private complete = false;
 
   @property()
@@ -270,7 +281,8 @@ export class Player extends LitElement {
       <div class="player">
         <div class="video-progress">
           <progress id="progress-bar" .value="${this.playTime}" min="0" max="${this.maxPlayTimeInSeconds()}"></progress>
-          <input class="seek" id="seek" .value="${this.playTime}" min="0" max="${this.maxPlayTimeInSeconds()}" type="range" step="1"
+          <input class="seek" id="seek" .value="${this.playTime}" min="0" max="${this.maxPlayTimeInSeconds()}" type="range"
+                 step="1"
                  @input=${this.skipToTimestamp} @mousemove=${this.updateSeekTooltip}>
           <div class="seek-tooltip" id="seek-tooltip" style="left: ${this.seek.left}px">${this.seek.content}</div>
         </div>
@@ -288,6 +300,10 @@ export class Player extends LitElement {
               <span> / </span>
               <time id="duration">${this.maxPlayTime()}</time>
             </div>
+          </div>
+          <div class="right-controls">
+            <span>Heatmap</span>
+            <input type="checkbox" .value=${this.showHeatmap} @input=${this.toggleHeatmap}>
           </div>
         </div>
       </div>
@@ -312,51 +328,24 @@ export class Player extends LitElement {
 
   togglePlay() {
     if (this.complete) {
-      this.reset();
+      this.replay.reset();
     } else {
       if (this.playing) {
-        this.pause();
+        this.replay.pause();
       } else {
-        this.play();
+        this.replay.play();
       }
     }
   }
 
-  private play() {
-    this.playing = true;
-    this.startTimer();
-  }
-
-  private pause() {
-    this.playing = false;
-    clearInterval(this.timer);
-  }
-
-  reset() {
-    this.playTime = 0;
-    this.complete = false;
-    this.play();
-  }
-
-  private startTimer() {
-    this.timer = setInterval(() => this.incrementTime(), 1000);
-  }
-
-  private incrementTime(): void {
-    if (this.playTime < this.maxPlayTimeInSeconds()) {
-      ++this.playTime;
-    }
-    if (this.playTime === this.maxPlayTimeInSeconds()) {
-      this.complete = true;
-      this.playing = false;
-      clearInterval(this.timer);
-    }
+  toggleHeatmap() {
+    this.showHeatmap = !this.showHeatmap;
+    this.replay.toggleHeatmap();
   }
 
   private skipToTimestamp(event: Event) {
     // @ts-ignore
-    this.playTime = event.path[0].valueAsNumber;
-    this.complete = this.playTime === this.maxPlayTimeInSeconds();
+    this.replay.setPlayTime(event.path[0].valueAsNumber * 1000, true);
   }
 
   private updateSeekTooltip(event: MouseEvent) {
@@ -378,7 +367,7 @@ export class Player extends LitElement {
   }
 
   private maxPlayTimeInSeconds(): number {
-    return Math.round(this.replay.events.playTime / 1000);
+    return Math.ceil(this.replay.events.playTime / 1000);
   }
 
   private maxPlayTime(): string {

@@ -5,16 +5,20 @@ import {MouseEventRecord, MouseEventType} from '../../record/model/mouse-event-r
 
 export class Heatmap {
 
+  readonly type: MouseEventType;
+
   private element: any;
   private heatmap: any;
 
-  constructor(element: any, historyRecord: LocationHistory, type: MouseEventType) {
+  constructor(element: any, historyRecord: LocationHistory, type?: MouseEventType) {
     this.element = element;
+    this.type = type;
     this.createMouseMoveHeatmap(historyRecord.mouseEvents.history, type);
   }
 
   private createMouseMoveHeatmap(events: MouseEventRecord[], type: MouseEventType): void {
-    this.create(events.filter(record => record.event.type === type));
+    const filteredEvents = type ? events.filter(record => record.event.type === type) : events;
+    this.create(filteredEvents);
   }
 
   private create(events: MouseEventRecord[]): void {

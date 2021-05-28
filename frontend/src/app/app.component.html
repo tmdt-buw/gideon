@@ -24,7 +24,6 @@
           History
         </h3>
         <button (click)="replay()" nz-button nzType="primary">Replay</button>
-        <button (click)="toggleHeatmap()" nz-button nzType="primary">Toggle Heatmap</button>
         <div>
           <div *ngFor="let record of gideon.getHistoryRecords()">
             <span>{{ record.label }}</span>

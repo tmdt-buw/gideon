@@ -25,6 +25,18 @@ export class MouseEventsRecord {
     return this._history[last].time - this._initialized;
   }
 
+  historyByTimeframe(ms: number): MouseEventRecord[][] {
+    const res = [];
+    for (let time = 0; time < Math.ceil(this.playTime / ms) + 1; time++) {
+      res.push([]);
+    }
+    this.history.forEach(el => {
+      const index = Math.floor((el.time - this.initialized) / ms);
+      res[index].push(el);
+    });
+    return res;
+  }
+
   /**
    * Register mouse events
    * @param element

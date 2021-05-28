@@ -1,5 +1,4 @@
-import {Component, ViewChildren} from '@angular/core';
-import {TrackedComponent} from '../../projects/core/src/examples/angular/tracked.component';
+import {Component} from '@angular/core';
 import {Gideon} from '../../projects/core/src/lib/gideon';
 import {appRoutingNames} from './app-routing.names';
 
@@ -14,6 +13,7 @@ export class AppComponent {
 
   isCollapsed = true;
   gideon = Gideon.getInstance();
+  isReplaying = false;
 
   trackedComponent;
 
@@ -25,7 +25,13 @@ export class AppComponent {
   }
 
   replay(): void {
-    this.gideon.replayLatest(this.trackedComponent);
+    if (this.isReplaying) {
+      this.gideon.stopReplay();
+      this.isReplaying = false;
+    } else {
+      this.gideon.replayLatest(this.trackedComponent);
+      this.isReplaying = true;
+    }
   }
 
   toggleHeatmap(): void {

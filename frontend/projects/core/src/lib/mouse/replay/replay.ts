@@ -1,19 +1,19 @@
+import ResizeObserver from 'resize-observer-polyfill';
 import {BehaviorSubject} from 'rxjs';
+import {Gideon} from '../../gideon';
 import {LocationHistory} from '../record/location-history';
 import {MouseEventRecord, MouseEventType} from '../record/model/mouse-event-record';
-import {ReplaySpeed} from './config/replay-speed';
 import {Cursor} from './widgets/cursor';
 import {Heatmap} from './widgets/heatmap';
 import {Player} from './widgets/player';
 
 export class Replay {
 
+  private readonly gideon: Gideon;
   private readonly element: any;
   private readonly history: LocationHistory;
   private readonly historyByTimeFrame: MouseEventRecord[][];
-
   private readonly timeFrame = 5;
-  private replaySpeed = ReplaySpeed.NORMAL;
 
   private readonly player: Player;
   private readonly cursor;
@@ -28,13 +28,8 @@ export class Replay {
     return this.history.mouseEvents;
   }
 
-  onResize() {
-    if (this.heatmap) {
-      this.showHeatmap(this.heatmap.type);
-    }
-  }
-
-  constructor(element: any, history: LocationHistory) {
+  constructor(gideon: Gideon, element: any, history: LocationHistory) {
+    this.gideon = gideon;
     this.element = element;
     this.history = history;
     this.historyByTimeFrame = this.history.mouseEvents.historyByTimeframe(this.timeFrame);
@@ -43,7 +38,10 @@ export class Replay {
     this.cursor = new Cursor();
     document.body.appendChild(this.cursor);
     this.element.classList.add('gd-hidden');
-    window.addEventListener('resize', () => this.onResize());
+    const observer = new ResizeObserver(entries => {
+      this.onResize();
+    });
+    observer.observe(this.element);
   }
 
   toggleHeatmap(type?: MouseEventType): void {
@@ -88,11 +86,15 @@ export class Replay {
     this.play();
   }
 
+  stopReplay() {
+    this.gideon.stopReplay();
+  }
+
   private startTimer() {
     this.timer = setInterval(() => this.incrementTime(), this.timeFrame);
   }
 
-  private setPlayTime(time: number, restore?: boolean): void {
+  setPlayTime(time: number, restore?: boolean): void {
     const max = Math.ceil(this.events.playTime / 1000) * 1000;
     if (time < max) {
       if (this.complete.value) {
@@ -102,14 +104,19 @@ export class Replay {
       this.playTime.next(time);
       const frame = this.historyByTimeFrame[idx];
       if (restore && frame.length < 1) {
+        let restored = false;
         for (let i = idx; i > 0; i--) {
           const prev = this.historyByTimeFrame[i];
           if (prev.length > 0) {
             this.replayRecords(prev);
+            restored = true;
             break;
           }
         }
-        this.hideCursor();
+        // there is no previous state (the cursor was not visible before)
+        if (!restored) {
+          this.hideCursor();
+        }
       } else {
         this.replayRecords(frame);
       }
@@ -119,6 +126,13 @@ export class Replay {
       this.playing.next(false);
       clearInterval(this.timer);
     }
+  }
+
+  private onResize() {
+    if (this.heatmap) {
+      this.showHeatmap(this.heatmap.type);
+    }
+    this.setPlayTime(this.playTime.value);
   }
 
   private incrementTime(): void {

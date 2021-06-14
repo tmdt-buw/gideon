@@ -26,15 +26,8 @@ export class Gideon {
     this._history.push(new LocationHistory(Object.assign({}, window.location), element));
   }
 
-  replayLatest(element: any): void {
-    const latest = this.getLatestHistoryElement();
-    if (latest) {
-      this.replay(element, latest);
-    }
-  }
-
   replay(element: any, history: LocationHistory) {
-    this._replay = new Replay(element, history);
+    this._replay = new Replay(this, element, history);
     this.setRecording(false);
   }
 
@@ -57,10 +50,5 @@ export class Gideon {
     }
     return null;
   }
-
-  toggleHeatmap(): void {
-    this._replay.toggleHeatmap('mousemove');
-  }
-
 }
 

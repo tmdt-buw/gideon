@@ -22,7 +22,11 @@ export class MouseEventsRecord {
 
   get playTime(): number {
     const last = this._history.length - 1;
-    return this._history[last].time - this._initialized;
+    if (last >= 0) {
+      return this._history[last].time - this._initialized;
+    } else {
+      return 0;
+    }
   }
 
   historyByTimeframe(ms: number): MouseEventRecord[][] {
@@ -45,7 +49,7 @@ export class MouseEventsRecord {
   private registerContainer(element: any): void {
     this.element = element;
     this._initialized = Date.now();
-    ['click', 'mousemove', 'mouseenter', 'mouseleave'].forEach(eventType => {
+    ['click', 'dblclick', 'mousedown', 'mouseenter', 'mouseleave', 'mousemove', 'mouseup'].forEach(eventType => {
       this.element.addEventListener(eventType, (event) => {
         if (this.disabled) {
           event.preventDefault();
@@ -67,8 +71,8 @@ export class MouseEventsRecord {
       const record = new MouseEventRecord();
       record.time = Date.now();
       const rect = this.element.getBoundingClientRect();
-      record.x = event.x / rect.right;
-      record.y = event.y / rect.bottom;
+      record.x = (event.x - rect.left) / rect.width;
+      record.y = (event.y - rect.top) / rect.height;
       record.event = event;
       this._history.push(record);
     }

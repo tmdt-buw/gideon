@@ -23,11 +23,13 @@
         <h3>
           History
         </h3>
-        <button (click)="replay()" nz-button nzType="primary">Replay</button>
-        <div>
-          <div *ngFor="let record of gideon.getHistoryRecords()">
-            <span>{{ record.label }}</span>
-          </div>
+        <div fxLayout="column">
+          <ng-container *ngFor="let record of gideon.getHistoryRecords(); let i = index">
+            <button (click)="replay(record)" nz-button nzType="dashed">{{ record.label }}</button>
+            <div class="timeline" *ngIf="i < gideon.getHistoryRecords().length - 1">
+              &nbsp;
+            </div>
+          </ng-container>
         </div>
       </div>
     </nz-sider>

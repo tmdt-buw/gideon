@@ -1,5 +1,7 @@
 import {Component} from '@angular/core';
+import {Router} from '@angular/router';
 import {Gideon} from '../../projects/core/src/lib/gideon';
+import {LocationHistory} from '../../projects/core/src/lib/mouse/record/location-history';
 import {appRoutingNames} from './app-routing.names';
 
 @Component({
@@ -13,29 +15,20 @@ export class AppComponent {
 
   isCollapsed = true;
   gideon = Gideon.getInstance();
-  isReplaying = false;
 
   trackedComponent;
 
-  constructor() {
+  constructor(private router: Router) {
   }
 
   onActivate(componentRef: any) {
-    this.trackedComponent = componentRef.elementRef.nativeElement;
+    this.trackedComponent = componentRef;
   }
 
-  replay(): void {
-    if (this.isReplaying) {
-      this.gideon.stopReplay();
-      this.isReplaying = false;
-    } else {
-      this.gideon.replayLatest(this.trackedComponent);
-      this.isReplaying = true;
-    }
+  replay(history: LocationHistory) {
+    this.router.navigate([history.location.pathname]).then(() => {
+        this.gideon.stopReplay();
+        this.gideon.replay(this.trackedComponent.container.nativeElement, history);
+    });
   }
-
-  toggleHeatmap(): void {
-    this.gideon.toggleHeatmap();
-  }
-
 }

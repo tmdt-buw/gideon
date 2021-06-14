@@ -1,20 +1,19 @@
-import {Component, ElementRef, OnDestroy, OnInit} from '@angular/core';
-import {ActivatedRoute} from '@angular/router';
+import {AfterViewInit, Component, OnDestroy, ViewChild} from '@angular/core';
 import {Gideon} from '../../lib/gideon';
 
 @Component({
   template: ''
 })
-export abstract class TrackedComponent implements OnInit, OnDestroy {
+export abstract class TrackedComponent implements AfterViewInit, OnDestroy {
 
-  protected constructor(private gideon: Gideon, private elementRef: ElementRef, private route: ActivatedRoute) {
+  @ViewChild('container') container;
+
+  protected constructor(private gideon: Gideon) {
   }
 
-  ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
-
-    });
-    this.gideon.registerElement(this.elementRef.nativeElement);
+  ngAfterViewInit(): void {
+    console.log(this.container)
+    this.gideon.registerElement(this.container.nativeElement);
   }
 
   ngOnDestroy(): void {

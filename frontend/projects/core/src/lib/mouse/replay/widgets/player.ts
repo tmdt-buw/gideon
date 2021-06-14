@@ -1,5 +1,6 @@
 import {css, html, LitElement} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
+import {Gideon} from '../../../gideon';
 import {Replay} from '../replay';
 
 
@@ -43,7 +44,7 @@ export class Player extends LitElement {
 
     .video-progress:hover {
       height: 5px;
-      margin-bottom: 0px;
+      margin-bottom: 0;
     }
 
     progress {
@@ -59,7 +60,7 @@ export class Player extends LitElement {
     }
 
     progress::-webkit-progress-bar {
-      background-color: #474545;
+      background-color: rgba(163, 163, 163, 0.64);
       border-radius: 2px;
     }
 
@@ -98,7 +99,7 @@ export class Player extends LitElement {
       background-color: rgba(0, 0, 0, 0.6);
     }
 
-    .bottom-controls {
+    .controls {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -111,6 +112,12 @@ export class Player extends LitElement {
 
     .right-controls {
       display: flex;
+      align-items: center;
+    }
+
+    .close-control {
+      display: flex;
+      justify-content: flex-end;
       align-items: center;
     }
 
@@ -279,6 +286,13 @@ export class Player extends LitElement {
   render() {
     return html`
       <div class="player">
+        <div class="close-control">
+          <button data-title=${'Close'} @click=${this.closeReplay}>
+            <svg class="playback-icons">
+              <use href="#close"></use>
+            </svg>
+          </button>
+        </div>
         <div class="video-progress">
           <progress id="progress-bar" .value="${this.playTime}" min="0" max="${this.maxPlayTimeInSeconds()}"></progress>
           <input class="seek" id="seek" .value="${this.playTime}" min="0" max="${this.maxPlayTimeInSeconds()}" type="range"
@@ -287,7 +301,7 @@ export class Player extends LitElement {
           <div class="seek-tooltip" id="seek-tooltip" style="left: ${this.seek.left}px">${this.seek.content}</div>
         </div>
 
-        <div class="bottom-controls">
+        <div class="controls">
           <div class="left-controls">
             <button data-title=${this.playing ? 'Pause' : 'Play'} @click=${this.togglePlay}>
               <svg class="playback-icons">
@@ -310,6 +324,10 @@ export class Player extends LitElement {
 
       <svg style="display: none">
         <defs>
+          <symbol id="close" viewBox="0 0 24 24">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/>
+          </symbol>
+
           <symbol id="pause" viewBox="0 0 24 24">
             <path d="M14.016 5.016h3.984v13.969h-3.984v-13.969zM6 18.984v-13.969h3.984v13.969h-3.984z"></path>
           </symbol>
@@ -343,14 +361,19 @@ export class Player extends LitElement {
     this.replay.toggleHeatmap();
   }
 
+  closeReplay() {
+    this.replay.stopReplay();
+  }
+
   private skipToTimestamp(event: Event) {
     // @ts-ignore
-    this.replay.setPlayTime(event.path[0].valueAsNumber * 1000, true);
+    const target = event.path[0] || event.originalTarget;
+    this.replay.setPlayTime(target.valueAsNumber * 1000, true);
   }
 
   private updateSeekTooltip(event: MouseEvent) {
     // @ts-ignore
-    const seek = event.path[0];
+    const seek = event.path[0] || event.originalTarget;
     const skipTo = Math.round(
       (event.offsetX / seek.clientWidth) *
       parseInt(seek.getAttribute('max'), 10)

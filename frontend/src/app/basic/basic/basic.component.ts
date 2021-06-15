@@ -1,7 +1,7 @@
-import {AfterViewInit, Component, ElementRef} from '@angular/core';
+import {AfterViewInit, Component} from '@angular/core';
 import {connect, getInstanceByDom} from 'echarts';
-import {TrackedComponent} from '../../../../projects/core/src/examples/angular/tracked.component';
-import {Gideon} from '../../../../projects/core/src/lib/gideon';
+import {TrackedComponent} from '../../../../projects/replay/src/examples/angular/tracked.component';
+import {Gideon} from '../../../../projects/replay/src/lib/gideon';
 
 @Component({
   selector: 'app-basic',

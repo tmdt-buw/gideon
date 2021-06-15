@@ -12,7 +12,6 @@ export abstract class TrackedComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    console.log(this.container)
     this.gideon.registerElement(this.container.nativeElement);
   }
 

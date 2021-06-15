@@ -1,7 +1,7 @@
-import {Component, ElementRef, OnDestroy} from '@angular/core';
+import {Component, OnDestroy} from '@angular/core';
 import * as util from 'zrender/lib/core/util';
-import {TrackedComponent} from '../../../../projects/core/src/examples/angular/tracked.component';
-import {Gideon} from '../../../../projects/core/src/lib/gideon';
+import {TrackedComponent} from '../../../../projects/replay/src/examples/angular/tracked.component';
+import {Gideon} from '../../../../projects/replay/src/lib/gideon';
 
 const SymbolSize = 20;
 const Data = [

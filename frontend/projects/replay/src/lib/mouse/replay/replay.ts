@@ -2,6 +2,8 @@ import ResizeObserver from 'resize-observer-polyfill';
 import {BehaviorSubject} from 'rxjs';
 import {Gideon} from '../../gideon';
 import {LocationHistory} from '../record/location-history';
+import {EventRecord} from '../record/model/events-record';
+import {KeyboardEventRecord} from '../record/model/keyboard-event-record';
 import {MouseEventRecord, MouseEventType} from '../record/model/mouse-event-record';
 import {Cursor} from './widgets/cursor';
 import {Heatmap} from './widgets/heatmap';
@@ -12,7 +14,7 @@ export class Replay {
   private readonly gideon: Gideon;
   private readonly element: any;
   private readonly history: LocationHistory;
-  private readonly historyByTimeFrame: MouseEventRecord[][];
+  private readonly historyByTimeFrame: EventRecord[][];
   private readonly timeFrame = 5;
 
   private readonly player: Player;
@@ -25,14 +27,14 @@ export class Replay {
   complete = new BehaviorSubject(false);
 
   get events() {
-    return this.history.mouseEvents;
+    return this.history.events;
   }
 
   constructor(gideon: Gideon, element: any, history: LocationHistory) {
     this.gideon = gideon;
     this.element = element;
     this.history = history;
-    this.historyByTimeFrame = this.history.mouseEvents.historyByTimeframe(this.timeFrame);
+    this.historyByTimeFrame = this.history.events.historyByTimeframe(this.timeFrame);
     this.player = new Player(this);
     document.body.appendChild(this.player);
     this.cursor = new Cursor();
@@ -139,57 +141,62 @@ export class Replay {
     this.setPlayTime(this.playTime.value + this.timeFrame);
   }
 
-  replayRecords(records: MouseEventRecord[]): void {
+  replayRecords(records: EventRecord[]): void {
     if (records) {
       records.forEach(record => {
-        this.replayMouseEvent(record);
+        this.replayEvent(record);
       });
     }
   }
 
-  private replayMouseEvent(record: MouseEventRecord): void {
-    switch (record.event.type) {
-      case 'click': {
-        this.replayMouseClick(record);
-        break;
-      }
-      case 'mouseleave': {
-        this.replayMouseLeave(record);
-        break;
-      }
-      default: {
-        this.replayDefault(record);
-        break;
+  private replayEvent(record: EventRecord): void {
+    if (record instanceof KeyboardEventRecord) {
+      this.replayKeyboardEvent(record);
+    }
+    if (record instanceof MouseEventRecord) {
+      switch (record.type) {
+        case 'click': {
+          this.replayMouseClick(record);
+          break;
+        }
+        case 'mouseleave': {
+          this.replayMouseLeave(record);
+          break;
+        }
+        default: {
+          this.replayMouseDefault(record);
+          break;
+        }
       }
     }
   }
 
   private replayMouseClick(eventRecord: MouseEventRecord): void {
-    const replay = this.replayDefault(eventRecord);
+    const replay = this.replayMouseDefault(eventRecord);
     // create click effect
     const clickEffect = document.createElement('div');
     clickEffect.className = 'clickEffect';
-    clickEffect.style.top = replay.y + 'px';
     clickEffect.style.left = replay.x + 'px';
+    clickEffect.style.top = replay.y + 'px';
     document.body.appendChild(clickEffect);
     clickEffect.addEventListener('animationend', () => clickEffect.parentElement.removeChild(clickEffect));
   }
 
   private replayMouseLeave(eventRecord: MouseEventRecord): void {
-    this.replayDefault(eventRecord);
+    this.replayMouseDefault(eventRecord);
     this.hideCursor();
   }
 
-  private replayDefault(eventRecord: MouseEventRecord): { x: number; y: number; } {
+  private replayMouseDefault(eventRecord: MouseEventRecord): { x: number; y: number; } {
     const rect = this.element.getBoundingClientRect();
-    const x = eventRecord.x * rect.right;
-    const y = eventRecord.y * rect.bottom;
+    const x = Math.round(eventRecord.x * rect.width + rect.left);
+    const y = Math.round(eventRecord.y * rect.height + rect.top);
     this.cursor.top = y + 'px';
     this.cursor.left = x + 'px';
-    const evt = document.createEvent('MouseEvent');
-    evt.initMouseEvent(eventRecord.event.type, true, true, window,
-      0, 0, 0, x, y, false, false, false, false, 0, null);
-    eventRecord.event.target.dispatchEvent(evt);
+    const evt = new MouseEvent(eventRecord.type, {
+      clientX: x, clientY: y
+    });
+    this.element.dispatchEvent(evt);
     return {x, y};
   }
 
@@ -198,4 +205,8 @@ export class Replay {
     this.cursor.left = '100%';
   }
 
+  private replayKeyboardEvent(eventRecord: KeyboardEventRecord): void {
+    const evt = new KeyboardEvent(eventRecord.type, eventRecord.event);
+    this.element.dispatchEvent(evt);
+  }
 }

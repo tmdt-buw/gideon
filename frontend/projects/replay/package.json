@@ -1,5 +1,5 @@
 {
-  "name": "@gideon/core",
+  "name": "@gideon/replay",
   "version": "0.0.1",
   "dependencies": {
     "lit": "^2.0.0-rc.2",

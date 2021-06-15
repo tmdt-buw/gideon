@@ -128,38 +128,38 @@
         }
       }
     },
-    "core": {
+    "replay": {
       "projectType": "library",
-      "root": "projects/core",
-      "sourceRoot": "projects/core/src",
+      "root": "projects/replay",
+      "sourceRoot": "projects/replay/src",
       "prefix": "gd",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:ng-packagr",
           "options": {
-            "tsConfig": "projects/core/tsconfig.lib.json",
-            "project": "projects/core/ng-package.json"
+            "tsConfig": "projects/replay/tsconfig.lib.json",
+            "project": "projects/replay/ng-package.json"
           },
           "configurations": {
             "production": {
-              "tsConfig": "projects/core/tsconfig.lib.prod.json"
+              "tsConfig": "projects/replay/tsconfig.lib.prod.json"
             }
           }
         },
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
-            "main": "projects/core/src/test.ts",
-            "tsConfig": "projects/core/tsconfig.spec.json",
-            "karmaConfig": "projects/core/karma.conf.js"
+            "main": "projects/replay/src/test.ts",
+            "tsConfig": "projects/replay/tsconfig.spec.json",
+            "karmaConfig": "projects/replay/karma.conf.js"
           }
         },
         "lint": {
           "builder": "@angular-devkit/build-angular:tslint",
           "options": {
             "tsConfig": [
-              "projects/core/tsconfig.lib.json",
-              "projects/core/tsconfig.spec.json"
+              "projects/replay/tsconfig.lib.json",
+              "projects/replay/tsconfig.spec.json"
             ],
             "exclude": [
               "**/node_modules/**"

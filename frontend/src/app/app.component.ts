@@ -1,7 +1,8 @@
+import {Platform} from '@angular/cdk/platform';
 import {Component} from '@angular/core';
 import {Router} from '@angular/router';
-import {Gideon} from '../../projects/core/src/lib/gideon';
-import {LocationHistory} from '../../projects/core/src/lib/mouse/record/location-history';
+import {Gideon} from '../../projects/replay/src/lib/gideon';
+import {LocationHistory} from '../../projects/replay/src/lib/mouse/record/location-history';
 import {appRoutingNames} from './app-routing.names';
 
 @Component({
@@ -15,13 +16,16 @@ export class AppComponent {
 
   isCollapsed = true;
   gideon = Gideon.getInstance();
+  tested = true;
 
   trackedComponent;
 
-  constructor(private router: Router) {
+  constructor(private router: Router, private platform: Platform) {
+    this.tested = platform.BLINK || platform.FIREFOX;
   }
 
   onActivate(componentRef: any) {
+    console.log(componentRef)
     this.trackedComponent = componentRef;
   }
 

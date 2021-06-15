@@ -13,22 +13,25 @@ export class Heatmap {
   constructor(element: any, historyRecord: LocationHistory, type?: MouseEventType) {
     this.element = element;
     this.type = type;
-    this.createMouseMoveHeatmap(historyRecord.mouseEvents.history, type);
+    this.createMouseMoveHeatmap(historyRecord.events.mouseEvents, type);
   }
 
   private createMouseMoveHeatmap(events: MouseEventRecord[], type: MouseEventType): void {
-    const filteredEvents = type ? events.filter(record => record.event.type === type) : events;
+    const filteredEvents = type ? events.filter(record => record.type === type) : events;
     this.create(filteredEvents);
   }
 
   private create(events: MouseEventRecord[]): void {
+    const position = this.element.style.position;
+    if (!position) {
+      this.element.style.position = 'relative';
+    }
     const heatmap = document.createElement('div');
     const rect = this.element.getBoundingClientRect();
-    heatmap.style.top = '0';
     heatmap.style.left = '0';
+    heatmap.style.top = '0';
     heatmap.style.width = `${rect.width}px`;
     heatmap.style.height = `${rect.height}px`;
-    this.element.style.position = 'relative';
     this.element.appendChild(heatmap);
     this.heatmap = {
       container: heatmap,

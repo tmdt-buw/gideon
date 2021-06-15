@@ -19,7 +19,7 @@ export class Gideon {
   }
 
   getHistoryRecords(): LocationHistory[] {
-    return this._history;
+    return this._history.filter(history => history.events.history.length > 0);
   }
 
   registerElement(element: any): void {
@@ -39,7 +39,7 @@ export class Gideon {
   private setRecording(isRecording: boolean) {
     const latest = this.getLatestHistoryElement();
     if (latest) {
-      this.getLatestHistoryElement().mouseEvents.disabled = !isRecording;
+      this.getLatestHistoryElement().events.disabled = !isRecording;
     }
   }
 

@@ -1,6 +1,9 @@
+import {KeyboardEventRecord} from './keyboard-event-record';
 import {MouseEventRecord} from './mouse-event-record';
 
-export class MouseEventsRecord {
+export type EventRecord = MouseEventRecord | KeyboardEventRecord;
+
+export class EventsRecord {
 
   constructor(element: any) {
     this.registerContainer(element);
@@ -8,12 +11,16 @@ export class MouseEventsRecord {
 
   public disabled = false;
 
-  private _history: MouseEventRecord[] = [];
+  private _history: EventRecord[] = [];
   private _initialized: number;
   private element: any;
 
-  get history() {
+  get history(): EventRecord[] {
     return this._history;
+  }
+
+  get mouseEvents(): MouseEventRecord[] {
+    return this._history.filter(history => history instanceof MouseEventRecord) as MouseEventRecord[];
   }
 
   get initialized(): number {
@@ -29,7 +36,7 @@ export class MouseEventsRecord {
     }
   }
 
-  historyByTimeframe(ms: number): MouseEventRecord[][] {
+  historyByTimeframe(ms: number): EventRecord[][] {
     const res = [];
     for (let time = 0; time < Math.ceil(this.playTime / ms) + 1; time++) {
       res.push([]);
@@ -59,6 +66,16 @@ export class MouseEventsRecord {
         }
       });
     });
+    ['keydown', 'keypress', 'keyup'].forEach(eventType => {
+      this.element.addEventListener(eventType, (event) => {
+        if (this.disabled) {
+          event.preventDefault();
+          event.stopPropagation();
+        } else {
+          this.recordKeyboardEvent(event);
+        }
+      });
+    });
   }
 
   /**
@@ -73,7 +90,28 @@ export class MouseEventsRecord {
       const rect = this.element.getBoundingClientRect();
       record.x = (event.x - rect.left) / rect.width;
       record.y = (event.y - rect.top) / rect.height;
-      record.event = event;
+      record.type = event.type;
+      record.elementRef = event;
+      this._history.push(record);
+    }
+  }
+
+  /**
+   * Record a keyboard event
+   * @param event
+   * @private
+   */
+  private recordKeyboardEvent(event: KeyboardEvent): void {
+    if (!this.disabled) {
+      const record = new KeyboardEventRecord();
+      record.time = Date.now();
+      record.type = event.type;
+      record.event = {
+        key: event.key,
+        altKey: event.altKey,
+        ctrlKey: event.ctrlKey,
+        shiftKey: event.shiftKey
+      };
       this._history.push(record);
     }
   }

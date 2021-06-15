@@ -1,6 +1,5 @@
 import {css, html, LitElement} from 'lit';
 import {customElement, property} from 'lit/decorators.js';
-import {Gideon} from '../../../gideon';
 import {Replay} from '../replay';
 
 
@@ -10,10 +9,10 @@ export class Player extends LitElement {
   static styles = css`
     .player {
       position: fixed;
-      width: 500px;
+      width: 800px;
       height: 100px;
       bottom: 50px;
-      left: calc(50% - 250px);
+      left: calc(50% - 400px);
       border: 1px solid lightgray;
       background: white;
       padding: 10px;
@@ -115,10 +114,21 @@ export class Player extends LitElement {
       align-items: center;
     }
 
-    .close-control {
+    .player-header {
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
       align-items: center;
+      height: 30px;
+      margin-bottom: 5px;
+    }
+
+    .close-button {
+      margin: 0;
+    }
+
+    .close-icon {
+      width: 20px;
+      height: 20px;
     }
 
     .time {
@@ -253,6 +263,28 @@ export class Player extends LitElement {
       stroke: #fff;
       cursor: pointer;
     }
+
+    .marks {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 10px;
+    }
+
+    .marks p {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      text-align: center;
+      width: 4px;
+      height: 4px;
+      background: green;
+      color: green;
+      border-radius: 100%;
+      line-height: 54px;
+      top: -34px;
+      left: 3px;
+      z-index: 0;
+    }
   `;
 
   constructor(replay: Replay) {
@@ -286,9 +318,10 @@ export class Player extends LitElement {
   render() {
     return html`
       <div class="player">
-        <div class="close-control">
-          <button data-title=${'Close'} @click=${this.closeReplay}>
-            <svg class="playback-icons">
+        <div class="player-header">
+          <span>GDReplay</span>
+          <button class="close-button" data-title=${'Close'} @click=${this.closeReplay}>
+            <svg class="close-icon">
               <use href="#close"></use>
             </svg>
           </button>
@@ -299,12 +332,16 @@ export class Player extends LitElement {
                  step="1"
                  @input=${this.skipToTimestamp} @mousemove=${this.updateSeekTooltip}>
           <div class="seek-tooltip" id="seek-tooltip" style="left: ${this.seek.left}px">${this.seek.content}</div>
+          <div class="marks">
+            <p class="click"></p>
+            <p></p>
+          </div>
         </div>
 
         <div class="controls">
           <div class="left-controls">
             <button data-title=${this.playing ? 'Pause' : 'Play'} @click=${this.togglePlay}>
-              <svg class="playback-icons">
+              <svg>
                 <use href=${this.complete ? '#replay' : this.playing ? '#pause' : '#play'}></use>
               </svg>
             </button>

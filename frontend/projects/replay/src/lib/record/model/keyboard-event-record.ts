@@ -7,4 +7,5 @@ export class KeyboardEventRecord {
     ctrlKey: boolean;
     shiftKey: boolean;
   };
+  element: string;
 }

@@ -1,3 +1,4 @@
+import {finder} from '@medv/finder';
 import {KeyboardEventRecord} from './keyboard-event-record';
 import {MouseEventRecord} from './mouse-event-record';
 
@@ -85,14 +86,18 @@ export class EventsRecord {
    */
   private recordMouseEvent(event: MouseEvent): void {
     if (!this.disabled) {
-      const record = new MouseEventRecord();
-      record.time = Date.now();
-      const rect = this.element.getBoundingClientRect();
-      record.x = (event.x - rect.left) / rect.width;
-      record.y = (event.y - rect.top) / rect.height;
-      record.type = event.type;
-      record.elementRef = event;
-      this._history.push(record);
+      try {
+        const record = new MouseEventRecord();
+        record.element = finder(event.target as Element);
+        record.time = Date.now();
+        const rect = this.element.getBoundingClientRect();
+        record.x = (event.x - rect.left) / rect.width;
+        record.y = (event.y - rect.top) / rect.height;
+        record.type = event.type;
+        this._history.push(record);
+      } catch (error) {
+        // transient element
+      }
     }
   }
 
@@ -103,16 +108,21 @@ export class EventsRecord {
    */
   private recordKeyboardEvent(event: KeyboardEvent): void {
     if (!this.disabled) {
-      const record = new KeyboardEventRecord();
-      record.time = Date.now();
-      record.type = event.type;
-      record.event = {
-        key: event.key,
-        altKey: event.altKey,
-        ctrlKey: event.ctrlKey,
-        shiftKey: event.shiftKey
-      };
-      this._history.push(record);
+      try {
+        const record = new KeyboardEventRecord();
+        record.time = Date.now();
+        record.type = event.type;
+        record.element = finder(event.target as Element);
+        record.event = {
+          key: event.key,
+          altKey: event.altKey,
+          ctrlKey: event.ctrlKey,
+          shiftKey: event.shiftKey
+        };
+        this._history.push(record);
+      } catch (error) {
+        // transient element - should never happen
+      }
     }
   }
 }

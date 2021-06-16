@@ -5,5 +5,5 @@ export class MouseEventRecord {
   x: number;
   y: number;
   type: string;
-  elementRef: any;
+  element: string;
 }

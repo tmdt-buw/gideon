@@ -1,6 +1,6 @@
 import ResizeObserver from 'resize-observer-polyfill';
 import {BehaviorSubject} from 'rxjs';
-import {Gideon} from '../../gideon';
+import {Gideon} from '../gideon';
 import {LocationHistory} from '../record/location-history';
 import {EventRecord} from '../record/model/events-record';
 import {KeyboardEventRecord} from '../record/model/keyboard-event-record';
@@ -15,7 +15,7 @@ export class Replay {
   private readonly element: any;
   private readonly history: LocationHistory;
   private readonly historyByTimeFrame: EventRecord[][];
-  private readonly timeFrame = 5;
+  private readonly timeFrame = 10;
 
   private readonly player: Player;
   private readonly cursor;
@@ -194,9 +194,10 @@ export class Replay {
     this.cursor.top = y + 'px';
     this.cursor.left = x + 'px';
     const evt = new MouseEvent(eventRecord.type, {
-      clientX: x, clientY: y
+      bubbles: true, cancelable: true, clientX: x, clientY: y, view: window
     });
-    this.element.dispatchEvent(evt);
+    const element = document.querySelector(eventRecord.element);
+    element.dispatchEvent(evt);
     return {x, y};
   }
 
@@ -207,6 +208,7 @@ export class Replay {
 
   private replayKeyboardEvent(eventRecord: KeyboardEventRecord): void {
     const evt = new KeyboardEvent(eventRecord.type, eventRecord.event);
-    this.element.dispatchEvent(evt);
+    const element = document.querySelector(eventRecord.element);
+    element.dispatchEvent(evt);
   }
 }

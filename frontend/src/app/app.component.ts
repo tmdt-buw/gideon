@@ -2,7 +2,7 @@ import {Platform} from '@angular/cdk/platform';
 import {Component} from '@angular/core';
 import {Router} from '@angular/router';
 import {Gideon} from '../../projects/replay/src/lib/gideon';
-import {LocationHistory} from '../../projects/replay/src/lib/mouse/record/location-history';
+import {LocationHistory} from '../../projects/replay/src/lib/record/location-history';
 import {appRoutingNames} from './app-routing.names';
 
 @Component({
@@ -25,14 +25,13 @@ export class AppComponent {
   }
 
   onActivate(componentRef: any) {
-    console.log(componentRef)
     this.trackedComponent = componentRef;
   }
 
   replay(history: LocationHistory) {
     this.router.navigate([history.location.pathname]).then(() => {
-        this.gideon.stopReplay();
-        this.gideon.replay(this.trackedComponent.container.nativeElement, history);
+      this.trackedComponent.reset();
+      this.gideon.replay(this.trackedComponent.container.nativeElement, history);
     });
   }
 }

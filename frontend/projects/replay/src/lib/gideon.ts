@@ -1,5 +1,5 @@
-import {LocationHistory} from './mouse/record/location-history';
-import {Replay} from './mouse/replay/replay';
+import {LocationHistory} from './record/location-history';
+import {Replay} from './replay/replay';
 
 export class Gideon {
 
@@ -27,6 +27,7 @@ export class Gideon {
   }
 
   replay(element: any, history: LocationHistory) {
+    this.stopReplay();
     this._replay = new Replay(this, element, history);
     this.setRecording(false);
   }

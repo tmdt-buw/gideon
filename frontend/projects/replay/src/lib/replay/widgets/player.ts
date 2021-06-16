@@ -9,10 +9,10 @@ export class Player extends LitElement {
   static styles = css`
     .player {
       position: fixed;
-      width: 800px;
+      width: 500px;
       height: 100px;
       bottom: 50px;
-      left: calc(50% - 400px);
+      left: calc(50% - 250px);
       border: 1px solid lightgray;
       background: white;
       padding: 10px;
@@ -65,11 +65,13 @@ export class Player extends LitElement {
 
     progress::-webkit-progress-value {
       background: var(--main-color);
+      opacity: 0.7;
       border-radius: 2px;
     }
 
     progress::-moz-progress-bar {
       border: 1px solid var(--main-color);
+      opacity: 0.7;
       background: var(--main-color);
     }
 
@@ -173,23 +175,6 @@ export class Player extends LitElement {
       height: 26px;
     }
 
-    .playback-animation {
-      pointer-events: none;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      margin-left: -40px;
-      margin-top: -40px;
-      width: 80px;
-      height: 80px;
-      border-radius: 80px;
-      background-color: rgba(0, 0, 0, 0.6);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      opacity: 0;
-    }
-
     input[type=range] {
       -webkit-appearance: none;
       -moz-appearance: none;
@@ -267,23 +252,21 @@ export class Player extends LitElement {
     .marks {
       display: flex;
       justify-content: space-between;
-      padding: 0 10px;
+      align-items: center;
     }
 
-    .marks p {
+    .marks div {
       position: relative;
-      display: flex;
-      justify-content: center;
-      text-align: center;
-      width: 4px;
-      height: 4px;
       background: green;
-      color: green;
-      border-radius: 100%;
-      line-height: 54px;
-      top: -34px;
-      left: 3px;
-      z-index: 0;
+      border-radius: 50%;
+      width: 3px;
+      height: 3px;
+      z-index: 2;
+    }
+
+    .video-progress:hover .marks div {
+      width: 5px;
+      height: 5px;
     }
   `;
 
@@ -333,8 +316,8 @@ export class Player extends LitElement {
                  @input=${this.skipToTimestamp} @mousemove=${this.updateSeekTooltip}>
           <div class="seek-tooltip" id="seek-tooltip" style="left: ${this.seek.left}px">${this.seek.content}</div>
           <div class="marks">
-            <p class="click"></p>
-            <p></p>
+            <div></div>
+            <div></div>
           </div>
         </div>
 

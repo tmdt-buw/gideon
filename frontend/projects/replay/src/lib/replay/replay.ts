@@ -127,6 +127,7 @@ export class Replay {
     if (time >= max) {
       this.complete.next(true);
       this.playing.next(false);
+      this.playTime.next(max);
       clearInterval(this.timer);
     }
   }

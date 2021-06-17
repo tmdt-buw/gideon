@@ -90,6 +90,9 @@ export class BasicComponent extends TrackedComponent implements AfterViewInit {
     ]
   };
 
+  /**
+   * Executed after view construction, connects charts and registers click event
+   */
   ngAfterViewInit(): void {
     super.ngAfterViewInit();
     setTimeout(() => {
@@ -99,14 +102,23 @@ export class BasicComponent extends TrackedComponent implements AfterViewInit {
       const chart2 = getInstanceByDom(chartElement2);
       connect([chart1, chart2]);
       chart1.on('click', (params) => {
-        this.updateChart(params.dataIndex);
+        this.updateChart(params.dataIndex).then();
       });
+      this.updateChart().then();
     });
   }
 
-  updateChart(selection?: number) {
-    const chartElement1 = document.getElementById('chart1');
-    const chart1 = getInstanceByDom(chartElement1);
+  /**
+   * Update chart marking the selection or resetting selection if no selection given
+   * @param selection index of selected data
+   */
+  async updateChart(selection?: number) {
+    let chart1;
+    while (!chart1) {
+      const chartElement1 = document.getElementById('chart1');
+      chart1 = getInstanceByDom(chartElement1);
+      await new Promise(r => setTimeout(r, 100));
+    }
     const data = [10, 52, 200, 334, 390, 330, 220].map((value, index) => {
       if (selection && selection === index) {
         return {
@@ -116,7 +128,9 @@ export class BasicComponent extends TrackedComponent implements AfterViewInit {
           }
         };
       } else {
-        return value;
+        return {
+          value
+        };
       }
     });
     chart1.setOption({
@@ -131,7 +145,10 @@ export class BasicComponent extends TrackedComponent implements AfterViewInit {
     });
   }
 
+  /**
+   * Clear the chart selection
+   */
   reset(): void {
-    this.updateChart();
+    this.updateChart().then();
   }
 }

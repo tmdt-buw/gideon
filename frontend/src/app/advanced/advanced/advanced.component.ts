@@ -1,17 +1,9 @@
-import {Component, OnDestroy} from '@angular/core';
+import {Component, ElementRef, OnDestroy} from '@angular/core';
 import {getInstanceByDom} from 'echarts';
-import * as util from 'zrender/lib/core/util';
+import ResizeObserver from 'resize-observer-polyfill';
 import {TrackedComponent} from '../../../../projects/replay/src/examples/angular/tracked.component';
 import {Gideon} from '../../../../projects/replay/src/lib/gideon';
 
-const SymbolSize = 20;
-let Data = [
-  [15, 0],
-  [-50, 10],
-  [-56.5, 20],
-  [-46.5, 30],
-  [-22.1, 40]
-];
 
 @Component({
   selector: 'app-advanced',
@@ -20,9 +12,14 @@ let Data = [
 })
 export class AdvancedComponent extends TrackedComponent implements OnDestroy {
 
-  chart: any;
-  resetData: () => void;
-  updatePosition: () => void;
+  symbolSize = 20;
+  data = [
+    [15, 0],
+    [-50, 10],
+    [-56.5, 20],
+    [-46.5, 30],
+    [-22.1, 40]
+  ];
   options = {
     title: {
       left: 'center',
@@ -73,106 +70,98 @@ export class AdvancedComponent extends TrackedComponent implements OnDestroy {
         id: 'a',
         type: 'line',
         smooth: true,
-        symbolSize: SymbolSize,
-        data: Data
+        symbolSize: this.symbolSize,
+        data: this.data
       }
     ]
   };
 
-  constructor() {
+  constructor(private element: ElementRef) {
     super(Gideon.getInstance());
   }
 
   ngOnDestroy(): void {
     super.ngOnDestroy();
-    if (this.updatePosition) {
-      window.removeEventListener('resize', this.updatePosition);
-    }
   }
 
-  onChartReady(myChart: any): void {
-    const onPointDragging = function(dataIndex) {
-      Data[dataIndex] = myChart.convertFromPixel({gridIndex: 0}, this.position) as number[];
-
-      // Update data
-      myChart.setOption({
-        series: [
-          {
-            id: 'a',
-            data: Data
-          }
-        ]
-      });
-    };
-
-    const showTooltip = (dataIndex) => {
-      myChart.dispatchAction({
-        type: 'showTip',
-        seriesIndex: 0,
-        dataIndex
-      });
-    };
-
-    const hideTooltip = () => {
-      myChart.dispatchAction({
-        type: 'hideTip'
-      });
-    };
-
-    const updatePosition = () => {
-      myChart.setOption({
-        graphic: util.map(Data, (item) => ({
-          position: myChart.convertToPixel({gridIndex: 0}, item)
-        }))
-      });
-    };
-
-    const reset = () => {
-      Data = [
-        [15, 0],
-        [-50, 10],
-        [-56.5, 20],
-        [-46.5, 30],
-        [-22.1, 40]
-      ];
-      updatePosition();
-    };
-
-    window.addEventListener('resize', updatePosition);
-    myChart.on('dataZoom', updatePosition);
-
-    // save handler and remove it on destroy
-    this.updatePosition = updatePosition;
-    this.resetData = reset;
-
+  /**
+   * Create chart functionality (dragging of points / axis zoom)
+   * @param chart
+   */
+  onChartReady(chart: any): void {
+    // Add shadow circles (which is not visible) to enable drag.
     setTimeout(() => {
-      myChart.setOption({
-        graphic: util.map(Data, (item, dataIndex) => {
+      chart.setOption({
+        graphic: this.data.map((item, dataIndex) => {
           return {
             type: 'circle',
-            position: myChart.convertToPixel({gridIndex: 0}, item),
+            position: chart.convertToPixel({gridIndex: 0}, item),
             shape: {
               cx: 0,
               cy: 0,
-              r: SymbolSize / 2
+              r: this.symbolSize / 2
             },
             invisible: true,
             draggable: true,
-            ondrag: util.curry<(dataIndex: any) => void, number>(onPointDragging, dataIndex),
-            onmousemove: util.curry<(dataIndex: any) => void, number>(showTooltip, dataIndex),
-            onmouseout: util.curry<(dataIndex: any) => void, number>(hideTooltip, dataIndex),
+            ondrag: (evt) => this.onPointDragging(chart, dataIndex, [evt.offsetX, evt.offsetY]),
+            onmousemove: () => this.showTooltip(chart, dataIndex),
+            onmouseout: () => this.hideTooltip(chart),
             z: 100
           };
         })
       });
-      this.chart = myChart;
+      const chartElement = document.getElementById('chart-adv');
+      const observer = new ResizeObserver(entries => {
+        this.updatePosition();
+      });
+      observer.observe(chartElement);
+      chart.on('dataZoom', this.updatePosition);
     }, 0);
   }
 
-  reset() {
+  showTooltip(chart: any, dataIndex: number) {
+    chart.dispatchAction({
+      type: 'showTip',
+      seriesIndex: 0,
+      dataIndex
+    });
+  }
+
+  hideTooltip(chart: any) {
+    chart.dispatchAction({
+      type: 'hideTip'
+    });
+  }
+
+  onPointDragging(chart: any, dataIndex: number, pos: number[][]) {
+    this.data[dataIndex] = chart.convertFromPixel('grid', pos);
+    // Update data
+    chart.setOption({
+      series: [{
+        id: 'a',
+        data: this.data
+      }]
+    });
+  }
+
+  updatePosition() {
     const chartElement = document.getElementById('chart-adv');
     const chart = getInstanceByDom(chartElement);
-    Data = [
+    chart.setOption({
+      graphic: this.data.map((item) => ({
+        position: chart.convertToPixel({gridIndex: 0}, item)
+      }))
+    });
+  }
+
+  async reset() {
+    let chart;
+    while (!chart) {
+      const chartElement = document.getElementById('chart-adv');
+      chart = getInstanceByDom(chartElement);
+      await new Promise(r => setTimeout(r, 100));
+    }
+    this.data = [
       [15, 0],
       [-50, 10],
       [-56.5, 20],
@@ -180,12 +169,11 @@ export class AdvancedComponent extends TrackedComponent implements OnDestroy {
       [-22.1, 40]
     ];
     chart.setOption({
-      series: [
-        {
-          id: 'a',
-          data: Data
-        }
-      ]
+      series: [{
+        id: 'a',
+        data: this.data
+      }]
     });
+    this.updatePosition();
   }
 }

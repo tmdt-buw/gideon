@@ -255,17 +255,40 @@ export class Player extends LitElement {
       align-items: center;
     }
 
-    .marks div {
-      position: relative;
-      background: green;
-      border-radius: 50%;
-      width: 3px;
+    .marks .keyboard {
+      position: absolute;
+      top: 0;
+      opacity: 0.5;
+      background: blueviolet;
+      border-radius: 5px;
       height: 3px;
+      width: 1%;
+      z-index: 2;
+    }
+
+    .marks .active {
+      position: absolute;
+      top: 0;
+      opacity: 0.5;
+      background: orange;
+      border-radius: 5px;
+      height: 3px;
+      width: 1%;
+      z-index: 2;
+    }
+
+    .marks .interact {
+      position: absolute;
+      top: 0;
+      opacity: 0.5;
+      background: green;
+      border-radius: 5px;
+      height: 3px;
+      width: 1%;
       z-index: 2;
     }
 
     .video-progress:hover .marks div {
-      width: 5px;
       height: 5px;
     }
   `;
@@ -273,12 +296,15 @@ export class Player extends LitElement {
   constructor(replay: Replay) {
     super();
     this.replay = replay;
+    this.activityProfile = replay.getRelativeActionTimes(this.resolution);
     this.replay.complete.subscribe(complete => this.complete = complete);
     this.replay.playing.subscribe(playing => this.playing = playing);
     this.replay.playTime.subscribe(time => this.playTime = Math.round(time / 1000));
   }
 
   private readonly replay: Replay;
+  private readonly resolution = 100;
+  private readonly activityProfile;
 
   @property()
   private showHeatmap = false;
@@ -316,8 +342,7 @@ export class Player extends LitElement {
                  @input=${this.skipToTimestamp} @mousemove=${this.updateSeekTooltip}>
           <div class="seek-tooltip" id="seek-tooltip" style="left: ${this.seek.left}px">${this.seek.content}</div>
           <div class="marks">
-            <div></div>
-            <div></div>
+            ${this.activityProfile.map(activity => html`<div class="${activity.type}" style="left: ${activity.from * this.resolution / 100}%"></div>`)}
           </div>
         </div>
 

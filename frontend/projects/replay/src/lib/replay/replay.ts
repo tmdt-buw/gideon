@@ -5,6 +5,7 @@ import {LocationHistory} from '../record/location-history';
 import {EventRecord} from '../record/model/events-record';
 import {KeyboardEventRecord} from '../record/model/keyboard-event-record';
 import {MouseEventRecord, MouseEventType} from '../record/model/mouse-event-record';
+import {WheelEventRecord} from '../record/model/wheel-event-record';
 import {Cursor} from './widgets/cursor';
 import {Heatmap} from './widgets/heatmap';
 import {Player} from './widgets/player';
@@ -155,7 +156,8 @@ export class Replay {
     }
     if (record instanceof MouseEventRecord) {
       switch (record.type) {
-        case 'click': {
+        case 'click':
+        case 'dblclick': {
           this.replayMouseClick(record);
           break;
         }
@@ -208,7 +210,80 @@ export class Replay {
 
   private replayKeyboardEvent(eventRecord: KeyboardEventRecord): void {
     const evt = new KeyboardEvent(eventRecord.type, eventRecord.event);
-    const element = document.querySelector(eventRecord.element);
-    element.dispatchEvent(evt);
+    document.dispatchEvent(evt);
+  }
+
+  getRelativeActionTimes(resolution: number): { type: 'active' | 'interact' | 'keyboard', from: number, to: number }[] {
+    const result = [];
+    const chunkSize = this.events.playTime / resolution;
+    const historyByFrame = this.history.events.historyByTimeframe(chunkSize);
+    let drag = false;
+    for (let i = 0; i < historyByFrame.length; i++) {
+      const frame = historyByFrame[i];
+      const from = i;
+      const to = i + 1;
+      let activityFrame = null;
+      for (let f = 0; f < frame.length; f++) {
+        const event = frame[f];
+        if (event instanceof KeyboardEventRecord) {
+          activityFrame = {
+            type: 'keyboard',
+            from,
+            to
+          };
+        }
+        if (event instanceof MouseEventRecord) {
+          if ((!activityFrame || activityFrame.type !== 'keyboard') && event.type === 'click') {
+            activityFrame = {
+              type: 'interact',
+              from,
+              to
+            };
+          }
+          if (event.type === 'mousedown') {
+            activityFrame = {
+              type: 'interact',
+              from,
+              to
+            };
+            drag = true;
+          }
+          if (event.type === 'mouseup') {
+            activityFrame = {
+              type: 'interact',
+              from,
+              to
+            };
+            drag = false;
+          }
+          if (event.type === 'mousemove' || event.type === 'mouseleave') {
+            if (drag) {
+              activityFrame = {
+                type: 'interact',
+                from,
+                to
+              };
+            } else {
+              activityFrame = {
+                type: 'active',
+                from,
+                to
+              };
+            }
+          }
+        }
+        if (!activityFrame && event instanceof WheelEventRecord) {
+          activityFrame = {
+            type: 'active',
+            from,
+            to
+          };
+        }
+      }
+      if (activityFrame) {
+        result.push(activityFrame);
+      }
+    }
+    return result;
   }
 }

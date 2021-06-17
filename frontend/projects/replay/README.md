@@ -12,6 +12,10 @@ Install the Gideon Replay library via
 
 ```npm install @gideon/replay```
 
+Include css styles into your own styles.css file
+
+```@import "@gideon/replay/src/lib/style/gideon.scss";```
+
 ## Track HTML-elements
 
 Tracking user interactions on a component is just one line of code:

@@ -6,6 +6,6 @@ export class KeyboardEventRecord {
     altKey: boolean;
     ctrlKey: boolean;
     shiftKey: boolean;
+    repeat: boolean;
   };
-  element: string;
 }

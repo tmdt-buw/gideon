@@ -68,7 +68,7 @@ export class EventsRecord {
       });
     });
     ['keydown', 'keypress', 'keyup'].forEach(eventType => {
-      this.element.addEventListener(eventType, (event) => {
+      document.addEventListener(eventType, (event: any) => {
         if (this.disabled) {
           event.preventDefault();
           event.stopPropagation();
@@ -112,12 +112,12 @@ export class EventsRecord {
         const record = new KeyboardEventRecord();
         record.time = Date.now();
         record.type = event.type;
-        record.element = finder(event.target as Element);
         record.event = {
           key: event.key,
           altKey: event.altKey,
           ctrlKey: event.ctrlKey,
-          shiftKey: event.shiftKey
+          shiftKey: event.shiftKey,
+          repeat: event.repeat
         };
         this._history.push(record);
       } catch (error) {

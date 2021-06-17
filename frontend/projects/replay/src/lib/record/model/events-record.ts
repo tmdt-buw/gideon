@@ -1,8 +1,9 @@
 import {finder} from '@medv/finder';
 import {KeyboardEventRecord} from './keyboard-event-record';
 import {MouseEventRecord} from './mouse-event-record';
+import {WheelEventRecord} from './wheel-event-record';
 
-export type EventRecord = MouseEventRecord | KeyboardEventRecord;
+export type EventRecord = MouseEventRecord | KeyboardEventRecord | WheelEventRecord;
 
 export class EventsRecord {
 
@@ -77,6 +78,14 @@ export class EventsRecord {
         }
       });
     });
+    this.element.addEventListener('wheel', (event) => {
+      if (this.disabled) {
+        event.preventDefault();
+        event.stopPropagation();
+      } else {
+        this.recordWheelEvent(event);
+      }
+    });
   }
 
   /**
@@ -122,6 +131,31 @@ export class EventsRecord {
         this._history.push(record);
       } catch (error) {
         // transient element - should never happen
+      }
+    }
+  }
+
+  /**
+   * Record a wheel event
+   * @param event
+   * @private
+   */
+  private recordWheelEvent(event: WheelEvent): void {
+    if (!this.disabled) {
+      try {
+        const record = new WheelEventRecord();
+        record.element = finder(event.target as Element);
+        record.time = Date.now();
+        record.type = event.type;
+        record.event = {
+          deltaX: event.deltaX,
+          deltaY: event.deltaY,
+          deltaZ: event.deltaZ,
+          deltaMode: event.deltaMode
+        };
+        this._history.push(record);
+      } catch (error) {
+        // transient element
       }
     }
   }

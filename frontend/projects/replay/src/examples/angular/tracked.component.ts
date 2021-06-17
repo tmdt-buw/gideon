@@ -4,16 +4,14 @@ import {Gideon} from '../../lib/gideon';
 @Component({
   template: ''
 })
-export abstract class TrackedComponent implements OnInit, AfterViewInit, OnDestroy {
+export abstract class TrackedComponent implements AfterViewInit, OnDestroy {
 
   @ViewChild('container') container;
 
   protected constructor(private gideon: Gideon) {
   }
 
-  ngOnInit() {
-    this.reset();
-  }
+  abstract reset(): void;
 
   ngAfterViewInit(): void {
     this.gideon.registerElement(this.container.nativeElement);
@@ -22,8 +20,5 @@ export abstract class TrackedComponent implements OnInit, AfterViewInit, OnDestr
   ngOnDestroy(): void {
     this.gideon.stopReplay();
   }
-
-  reset(): void {
-    console.log('reset');
-  }
 }
+

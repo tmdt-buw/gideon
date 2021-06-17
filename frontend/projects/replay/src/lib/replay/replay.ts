@@ -154,6 +154,9 @@ export class Replay {
     if (record instanceof KeyboardEventRecord) {
       this.replayKeyboardEvent(record);
     }
+    if (record instanceof WheelEventRecord) {
+      this.replayWheelEvent(record);
+    }
     if (record instanceof MouseEventRecord) {
       switch (record.type) {
         case 'click':
@@ -211,6 +214,14 @@ export class Replay {
   private replayKeyboardEvent(eventRecord: KeyboardEventRecord): void {
     const evt = new KeyboardEvent(eventRecord.type, eventRecord.event);
     document.dispatchEvent(evt);
+  }
+
+  private replayWheelEvent(eventRecord: WheelEventRecord): void {
+    const evt = new WheelEvent(eventRecord.type, Object.assign({
+      bubbles: true, cancelable: true, view: window
+    }, eventRecord.event));
+    const element = document.querySelector(eventRecord.element);
+    element.dispatchEvent(evt);
   }
 
   getRelativeActionTimes(resolution: number): { type: 'active' | 'interact' | 'keyboard', from: number, to: number }[] {

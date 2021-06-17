@@ -1,10 +1,11 @@
 import {Component, OnDestroy} from '@angular/core';
+import {getInstanceByDom} from 'echarts';
 import * as util from 'zrender/lib/core/util';
 import {TrackedComponent} from '../../../../projects/replay/src/examples/angular/tracked.component';
 import {Gideon} from '../../../../projects/replay/src/lib/gideon';
 
 const SymbolSize = 20;
-const Data = [
+let Data = [
   [15, 0],
   [-50, 10],
   [-56.5, 20],
@@ -19,6 +20,8 @@ const Data = [
 })
 export class AdvancedComponent extends TrackedComponent implements OnDestroy {
 
+  chart: any;
+  resetData: () => void;
   updatePosition: () => void;
   options = {
     title: {
@@ -124,11 +127,23 @@ export class AdvancedComponent extends TrackedComponent implements OnDestroy {
       });
     };
 
+    const reset = () => {
+      Data = [
+        [15, 0],
+        [-50, 10],
+        [-56.5, 20],
+        [-46.5, 30],
+        [-22.1, 40]
+      ];
+      updatePosition();
+    };
+
     window.addEventListener('resize', updatePosition);
     myChart.on('dataZoom', updatePosition);
 
     // save handler and remove it on destroy
     this.updatePosition = updatePosition;
+    this.resetData = reset;
 
     setTimeout(() => {
       myChart.setOption({
@@ -150,7 +165,27 @@ export class AdvancedComponent extends TrackedComponent implements OnDestroy {
           };
         })
       });
+      this.chart = myChart;
     }, 0);
   }
 
+  reset() {
+    const chartElement = document.getElementById('chart-adv');
+    const chart = getInstanceByDom(chartElement);
+    Data = [
+      [15, 0],
+      [-50, 10],
+      [-56.5, 20],
+      [-46.5, 30],
+      [-22.1, 40]
+    ];
+    chart.setOption({
+      series: [
+        {
+          id: 'a',
+          data: Data
+        }
+      ]
+    });
+  }
 }

@@ -99,29 +99,39 @@ export class BasicComponent extends TrackedComponent implements AfterViewInit {
       const chart2 = getInstanceByDom(chartElement2);
       connect([chart1, chart2]);
       chart1.on('click', (params) => {
-        const data = [10, 52, 200, 334, 390, 330, 220].map((value, index) => {
-          if (params.dataIndex === index) {
-            return {
-              value,
-              itemStyle: {
-                color: '#a90000'
-              }
-            };
-          } else {
-            return value;
-          }
-        });
-        chart1.setOption({
-          series: [
-            {
-              name: 'Counters',
-              type: 'bar',
-              barWidth: '60%',
-              data
-            }
-          ]
-        });
+        this.updateChart(params.dataIndex);
       });
     });
+  }
+
+  updateChart(selection?: number) {
+    const chartElement1 = document.getElementById('chart1');
+    const chart1 = getInstanceByDom(chartElement1);
+    const data = [10, 52, 200, 334, 390, 330, 220].map((value, index) => {
+      if (selection && selection === index) {
+        return {
+          value,
+          itemStyle: {
+            color: '#a90000'
+          }
+        };
+      } else {
+        return value;
+      }
+    });
+    chart1.setOption({
+      series: [
+        {
+          name: 'Counters',
+          type: 'bar',
+          barWidth: '60%',
+          data
+        }
+      ]
+    });
+  }
+
+  reset(): void {
+    this.updateChart();
   }
 }

@@ -29,6 +29,9 @@ export class EventsRecord {
     return this._initialized;
   }
 
+  /**
+   * Return total play time
+   */
   get playTime(): number {
     const last = this._history.length - 1;
     if (last >= 0) {
@@ -38,6 +41,10 @@ export class EventsRecord {
     }
   }
 
+  /**
+   * Aggregate events by ms, i.e. 100 ms => 100 ms chunks
+   * @param ms
+   */
   historyByTimeframe(ms: number): EventRecord[][] {
     const res = [];
     for (let time = 0; time < Math.ceil(this.playTime / ms) + 1; time++) {
@@ -58,7 +65,7 @@ export class EventsRecord {
   private registerContainer(element: any): void {
     this.element = element;
     this._initialized = Date.now();
-    ['click', 'dblclick', 'mousedown', 'mouseenter', 'mouseleave', 'mousemove', 'mouseup'].forEach(eventType => {
+    ['click', 'dblclick', 'mousedown', 'mouseenter', 'mouseleave', 'mousemove', 'mouseup', 'mouseover', 'contextmenu'].forEach(eventType => {
       this.element.addEventListener(eventType, (event) => {
         if (this.disabled) {
           event.preventDefault();

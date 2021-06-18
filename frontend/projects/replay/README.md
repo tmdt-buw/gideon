@@ -34,4 +34,16 @@ Replay a history record on an HTML-element:
 
 ```Gideon.getInstance().getHistoryRecords(htmlElement, historyRecord);```
 
+Stop current replay:
 
+```Gideon.getInstance().stopReplay();```
+
+## Export / Import
+
+Export complete history:
+
+```Gideon.getInstance().export();```
+
+Export specific element history:
+
+```Gideon.getInstance().export(history);```

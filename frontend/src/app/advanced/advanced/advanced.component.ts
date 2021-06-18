@@ -1,4 +1,4 @@
-import {Component, ElementRef, OnDestroy} from '@angular/core';
+import {Component, ElementRef, OnDestroy, ViewChild} from '@angular/core';
 import {getInstanceByDom} from 'echarts';
 import ResizeObserver from 'resize-observer-polyfill';
 import {TrackedComponent} from '../../../../projects/replay/src/examples/angular/tracked.component';
@@ -11,6 +11,8 @@ import {Gideon} from '../../../../projects/replay/src/lib/gideon';
   styleUrls: ['./advanced.component.less']
 })
 export class AdvancedComponent extends TrackedComponent implements OnDestroy {
+
+  @ViewChild('container') container: ElementRef;
 
   symbolSize = 20;
   data = [
@@ -76,7 +78,7 @@ export class AdvancedComponent extends TrackedComponent implements OnDestroy {
     ]
   };
 
-  constructor(private element: ElementRef) {
+  constructor() {
     super(Gideon.getInstance());
   }
 
@@ -115,7 +117,9 @@ export class AdvancedComponent extends TrackedComponent implements OnDestroy {
         this.updatePosition();
       });
       observer.observe(chartElement);
-      chart.on('dataZoom', this.updatePosition);
+      chart.on('dataZoom', (event) => {
+        this.updatePosition();
+      });
     }, 0);
   }
 

@@ -47,6 +47,10 @@ export class Replay {
     observer.observe(this.element);
   }
 
+  /**
+   * Toggle heat map visibility
+   * @param type
+   */
   toggleHeatmap(type?: MouseEventType): void {
     if (this.heatmap) {
       this.removeHeatmap();
@@ -55,16 +59,26 @@ export class Replay {
     }
   }
 
+  /**
+   * Show the heat map
+   * @param type
+   */
   showHeatmap(type?: MouseEventType): void {
     this.heatmap?.remove();
     this.heatmap = new Heatmap(this.element, this.history, type);
   }
 
+  /**
+   * Remove heat map
+   */
   removeHeatmap(): void {
     this.heatmap?.remove();
     this.heatmap = null;
   }
 
+  /**
+   * Remove all UI elements
+   */
   remove() {
     this.pause();
     this.removeHeatmap();
@@ -73,30 +87,51 @@ export class Replay {
     this.element.classList.remove('gd-hidden');
   }
 
+  /**
+   * Start replay
+   */
   play() {
     this.playing.next(true);
     this.startTimer();
   }
 
+  /**
+   * Pause replay
+   */
   pause() {
     this.playing.next(false);
     clearInterval(this.timer);
   }
 
+  /**
+   * Reset replay
+   */
   reset() {
     this.playTime.next(0);
     this.complete.next(false);
     this.play();
   }
 
+  /**
+   * Stop replay
+   */
   stopReplay() {
     this.gideon.stopReplay();
   }
 
+  /**
+   * Start replay timer
+   * @private
+   */
   private startTimer() {
     this.timer = setInterval(() => this.incrementTime(), this.timeFrame);
   }
 
+  /**
+   * Go to a specific play time
+   * @param time time to jump to
+   * @param restore restore previous state?
+   */
   setPlayTime(time: number, restore?: boolean): void {
     const max = Math.ceil(this.events.playTime / 1000) * 1000;
     if (time < max) {
@@ -132,6 +167,10 @@ export class Replay {
     }
   }
 
+  /**
+   * Reprint heat map on resize
+   * @private
+   */
   private onResize() {
     if (this.heatmap) {
       this.showHeatmap(this.heatmap.type);
@@ -139,10 +178,18 @@ export class Replay {
     this.setPlayTime(this.playTime.value);
   }
 
+  /**
+   * Increment time
+   * @private
+   */
   private incrementTime(): void {
     this.setPlayTime(this.playTime.value + this.timeFrame);
   }
 
+  /**
+   * Replay all records
+   * @param records
+   */
   replayRecords(records: EventRecord[]): void {
     if (records) {
       records.forEach(record => {
@@ -151,6 +198,11 @@ export class Replay {
     }
   }
 
+  /**
+   * Replay event record
+   * @param record
+   * @private
+   */
   private replayEvent(record: EventRecord): void {
     if (record instanceof KeyboardEventRecord) {
       this.replayKeyboardEvent(record);
@@ -177,6 +229,11 @@ export class Replay {
     }
   }
 
+  /**
+   * Show click animation and replay default
+   * @param eventRecord
+   * @private
+   */
   private replayMouseClick(eventRecord: MouseEventRecord): void {
     const replay = this.replayMouseDefault(eventRecord);
     // create click effect
@@ -188,11 +245,21 @@ export class Replay {
     clickEffect.addEventListener('animationend', () => clickEffect.parentElement.removeChild(clickEffect));
   }
 
+  /**
+   * Hide cursor and replay default
+   * @param eventRecord
+   * @private
+   */
   private replayMouseLeave(eventRecord: MouseEventRecord): void {
     this.replayMouseDefault(eventRecord);
     this.hideCursor();
   }
 
+  /**
+   * Default mouse event replay
+   * @param eventRecord
+   * @private
+   */
   private replayMouseDefault(eventRecord: MouseEventRecord): { x: number; y: number; } {
     const rect = this.element.getBoundingClientRect();
     const x = Math.round(eventRecord.x * rect.width + rect.left);
@@ -203,20 +270,40 @@ export class Replay {
       bubbles: true, cancelable: true, clientX: x, clientY: y, view: window
     });
     const element = document.querySelector(eventRecord.element);
+    if (eventRecord.type === 'mouseup') {
+      const evtMv = new MouseEvent('mousemove', {
+        bubbles: true, cancelable: true, clientX: x, clientY: y, view: window
+      });
+      element.dispatchEvent(evtMv);
+    }
     element.dispatchEvent(evt);
     return {x, y};
   }
 
+  /**
+   * Move cursor out of screen to hide
+   * @private
+   */
   private hideCursor(): void {
     this.cursor.top = '100%';
     this.cursor.left = '100%';
   }
 
+  /**
+   * Default keyboard event replay
+   * @param eventRecord
+   * @private
+   */
   private replayKeyboardEvent(eventRecord: KeyboardEventRecord): void {
     const evt = new KeyboardEvent(eventRecord.type, eventRecord.event);
     document.dispatchEvent(evt);
   }
 
+  /**
+   * Default wheel event replay
+   * @param eventRecord
+   * @private
+   */
   private replayWheelEvent(eventRecord: WheelEventRecord): void {
     const evt = new WheelEvent(eventRecord.type, Object.assign({
       bubbles: true, cancelable: true, view: window
@@ -225,6 +312,10 @@ export class Replay {
     element.dispatchEvent(evt);
   }
 
+  /**
+   * Calculate action items to show activity overlay on player progress bar
+   * @param resolution - aggregation level
+   */
   getRelativeActionTimes(resolution: number): { type: 'active' | 'interact' | 'keyboard', from: number, to: number }[] {
     const result = [];
     const chunkSize = this.events.playTime / resolution;

@@ -4,12 +4,10 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build core --prod && ng build angular --prod",
+    "build": "ng build --prod",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e",
-    "watch:core": "ng build core --watch",
-    "watch:angular": "ng build angular --watch"
+    "e2e": "ng e2e"
   },
   "dependencies": {
     "@angular/animations": "~11.2.4",

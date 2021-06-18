@@ -1,6 +1,9 @@
 {
   "name": "@gideon/replay",
   "version": "0.0.1",
+  "scripts": {
+    "build": "tsc"
+  },
   "dependencies": {
     "lit": "^2.0.0-rc.2",
     "@medv/finder": "^2.0.0",

@@ -2,7 +2,7 @@
 {
   "extends": "../../tsconfig.json",
   "compilerOptions": {
-    "outDir": "../../out-tsc/lib",
+    "outDir": "../../replay/lib",
     "target": "es2015",
     "declaration": true,
     "declarationMap": true,
